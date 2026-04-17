@@ -1890,6 +1890,13 @@ def evaluate_zones(
                 "— pânico ativo, todas as zonas suspensas"
             ],
             "score_breakdown": None,
+            "active_params": {
+                "base_flow_gate": BASE_FLOW_GATE,
+                "score_moderate": float(_zone_session_params.get("zones_score_moderate_thresh", 2.5)),
+                "score_strong":   float(_zone_session_params.get("zones_score_strong_thresh", 4.0)),
+                "ofi_slow_fade":  float(_zone_session_params.get("zones_ofi_slow_fade_thresh", OFI_SLOW_BLOCK_FADE)),
+                "d30_threshold":  20.0,
+            },
             "macro_context_applied": {
                 "ts_ratio":           ts_ratio,
                 "ts_state":           ctx.get('ts_state', 'UNKNOWN'),
@@ -2167,6 +2174,20 @@ def evaluate_zones(
         "price_vs_rth_open":    _price_vs_rth_open,  # Item 5: "ABOVE"|"BELOW"|"NEUTRAL"
         "regime_bias":          _regime_bias,         # Item 5: "BULLISH"|"BEARISH"|"NEUTRAL"
         "regime_cvd_conf":      _regime_cvd_conf,     # Item 6: "CONFIRMED"|"CONTESTED"|"NEUTRAL"
+        # Parâmetros activos no momento da avaliação — auditoria parametros×outcomes
+        "active_params": {
+            "base_flow_gate":       BASE_FLOW_GATE,
+            "score_moderate":       float(_zone_session_params.get(
+                                        f"zones_score_moderate_thresh_{symbol.lower()}" if symbol else "",
+                                        _zone_session_params.get("zones_score_moderate_thresh", 2.5))),
+            "score_strong":         float(_zone_session_params.get(
+                                        f"zones_score_strong_thresh_{symbol.lower()}" if symbol else "",
+                                        _zone_session_params.get("zones_score_strong_thresh", 4.0))),
+            "ofi_slow_fade":        float(_zone_session_params.get(
+                                        f"zones_ofi_slow_fade_thresh_{symbol.lower()}" if symbol else "",
+                                        _zone_session_params.get("zones_ofi_slow_fade_thresh", OFI_SLOW_BLOCK_FADE))),
+            "d30_threshold":        20.0,
+        },
         "macro_context_applied": {
             "ts_ratio":                  ts_ratio,
             "ts_state":                  ctx.get('ts_state', 'UNKNOWN'),

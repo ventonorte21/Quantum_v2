@@ -1484,6 +1484,11 @@ function FunnelPanel() {
   const [showZo, setShowZo]         = useState(true);
   const [zoExpanded, setZoExpanded] = useState({});
 
+  // Param Audit state
+  const [paData, setPaData]       = useState(null);
+  const [paLoading, setPaLoading] = useState(false);
+  const [showPa, setShowPa]       = useState(true);
+
   const fetchFunnel = useCallback(async () => {
     setLoading(true); setError(null);
     try {
@@ -1512,8 +1517,23 @@ function FunnelPanel() {
     }
   }, [zoDays, symFilter]);
 
+  const fetchParamAudit = useCallback(async () => {
+    setPaLoading(true);
+    try {
+      const params = new URLSearchParams({ days: zoDays });
+      if (symFilter) params.set("symbol", symFilter);
+      const r = await axios.get(`${API}/scalp/param-audit?${params}`);
+      setPaData(r.data);
+    } catch (_) {
+      setPaData(null);
+    } finally {
+      setPaLoading(false);
+    }
+  }, [zoDays, symFilter]);
+
   useEffect(() => { fetchFunnel(); }, [fetchFunnel]);
   useEffect(() => { fetchZoneOutcomes(); }, [fetchZoneOutcomes]);
+  useEffect(() => { fetchParamAudit(); }, [fetchParamAudit]);
 
   const f    = data?.funnel || {};
   const n3s  = data?.n3_stats || {};
@@ -2270,6 +2290,129 @@ function FunnelPanel() {
                       </div>
                     </div>
                   )}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* ── Row 3d: Param Audit — Sensibilidade Score×Threshold ── */}
+          <div className="border border-teal-500/20 bg-teal-500/5">
+            <button
+              onClick={() => setShowPa(v => !v)}
+              className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-teal-400/80 uppercase tracking-wider hover:bg-teal-500/10 transition-all">
+              <span className="flex items-center gap-2 flex-wrap">
+                Param Audit — Sensibilidade Score×Threshold
+                {paData && !paLoading && (
+                  <span className="font-normal normal-case flex gap-2 flex-wrap">
+                    <span className="text-yellow-400" title="Score mínimo MODERATE">M≥{(paData.thresholds?.score_moderate ?? 2.5).toFixed(1)}</span>
+                    <span className="text-emerald-400" title="Score mínimo STRONG">S≥{(paData.thresholds?.score_strong ?? 4.0).toFixed(1)}</span>
+                    <span className="text-teal-400" title="Base Flow Gate">BFG {(paData.thresholds?.base_flow_gate ?? 1.2).toFixed(1)}</span>
+                    <span className="text-teal-700">· {paData.zones?.length ?? 0} zonas · {paData.days}d</span>
+                  </span>
+                )}
+                {paLoading && <span className="ml-2 text-zinc-600 font-normal normal-case">carregando…</span>}
+              </span>
+              <span className="text-zinc-600">{showPa ? "▲" : "▼"}</span>
+            </button>
+            {showPa && (() => {
+              const zones = paData?.zones || [];
+              const thr   = paData?.thresholds || {};
+              const mod   = thr.score_moderate ?? 2.5;
+              const str   = thr.score_strong   ?? 4.0;
+
+              if (zones.length === 0 && !paLoading) {
+                return (
+                  <div className="px-4 py-3 text-[10px] text-zinc-600">
+                    Sem dados de score ainda — campos preenchidos em snapshots a partir de agora.
+                  </div>
+                );
+              }
+              if (paLoading) return <div className="px-4 py-3 text-[10px] text-zinc-600">A carregar…</div>;
+
+              return (
+                <div className="px-3 pb-3 pt-1 space-y-2">
+                  {/* Legenda */}
+                  <div className="flex gap-4 text-[9px] text-zinc-500 flex-wrap pt-1">
+                    <span>
+                      <span className="inline-block w-2 h-2 bg-red-500/40 mr-1 align-middle" />
+                      Bloqueado (score &lt; {mod.toFixed(1)})
+                    </span>
+                    <span>
+                      <span className="inline-block w-2 h-2 bg-yellow-500/60 mr-1 align-middle" />
+                      Marginal ({mod.toFixed(1)}–{str.toFixed(1)})
+                    </span>
+                    <span>
+                      <span className="inline-block w-2 h-2 bg-emerald-500/70 mr-1 align-middle" />
+                      STRONG (≥{str.toFixed(1)})
+                    </span>
+                    <span>
+                      <span className="inline-block w-2 h-2 bg-emerald-400/80 mr-1 align-middle" />
+                      Overlay = % ACTIVE_SIGNAL
+                    </span>
+                  </div>
+
+                  {zones.map(z => {
+                    const buckets = z.score_buckets || [];
+                    const maxN    = Math.max(...buckets.map(b => b.n_total), 1);
+                    return (
+                      <div key={z.zone_type} className="border border-zinc-800/60 bg-zinc-900/40 p-2">
+                        {/* Cabeçalho zona */}
+                        <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                          <span className="text-[10px] font-bold text-zinc-300">{z.zone_type}</span>
+                          <span className="flex gap-2 text-[9px] flex-wrap">
+                            <span className="text-emerald-400" title="Passaram S2 (ACTIVE_SIGNAL)">✓ {z.n_active} activos</span>
+                            <span className="text-red-400/70" title="Bloqueados S2">✗ {z.n_blocked} bloqueados</span>
+                            {z.marginal_blocked > 0 && (
+                              <span className="text-yellow-400/70" title={`Bloqueados com score ≥ MODERATE threshold (${mod.toFixed(1)}) — potencial se threshold baixar`}>
+                                ⚠ {z.marginal_blocked} acima MODERATE bloqueados
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Histograma de scores */}
+                        {buckets.length > 0 ? (
+                          <div className="flex items-end gap-[2px] mt-1" style={{ height: '36px' }}>
+                            {buckets.map(b => {
+                              const heightPct  = (b.n_total / maxN) * 100;
+                              const activeRatio = b.n_total > 0 ? b.n_active / b.n_total : 0;
+                              const bgColor    = b.bucket >= str ? "bg-emerald-500/60"
+                                              : b.bucket >= mod ? "bg-yellow-500/50"
+                                              : "bg-red-500/30";
+                              return (
+                                <div
+                                  key={b.bucket}
+                                  className="relative flex flex-col justify-end flex-shrink-0"
+                                  style={{ width: '12px', height: '36px' }}
+                                  title={`Score ${b.bucket.toFixed(1)} | total ${b.n_total} | activos ${b.n_active} | bloqueados ${b.n_blocked}`}
+                                >
+                                  <div className={`w-full ${bgColor}`} style={{ height: `${heightPct}%` }} />
+                                  {activeRatio > 0 && (
+                                    <div
+                                      className="absolute bottom-0 w-full bg-emerald-400/80"
+                                      style={{ height: `${heightPct * activeRatio}%` }}
+                                    />
+                                  )}
+                                  <div className="absolute -bottom-3 left-0 right-0 text-center text-[6px] text-zinc-600 leading-none">
+                                    {b.bucket.toFixed(1)}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-[9px] text-zinc-600">sem score_breakdown (legado)</span>
+                        )}
+
+                        {/* Score médio linha */}
+                        <div className="mt-4 flex gap-3 text-[9px] text-zinc-500 flex-wrap">
+                          {z.avg_score_active  != null && <span>Avg activo: <span className="text-emerald-400 font-semibold">{z.avg_score_active.toFixed(2)}</span></span>}
+                          {z.avg_score_blocked != null && <span>Avg bloqueado: <span className="text-red-400">{z.avg_score_blocked.toFixed(2)}</span></span>}
+                          <span className="text-zinc-700">N total: {z.n_total}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })()}

@@ -3071,6 +3071,196 @@ async def zone_outcomes(
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# PARAM AUDIT — sensibilidade de parâmetros × score × outcomes
+# ══════════════════════════════════════════════════════════════════════════════
+
+@scalp_router.get("/param-audit")
+async def param_audit(
+    symbol:    Optional[str] = Query(None),
+    days:      int           = Query(30,  ge=1,  le=90),
+    zone_type: Optional[str] = Query(None, description="Filtrar por zone_type específico"),
+):
+    """
+    Auditoria de sensibilidade parametros×outcomes.
+
+    Para cada zone_type com zona activa, retorna:
+      - Distribuição de scores por bucket (0.5 pts) × scalp_status
+      - Thresholds activos (MODERATE / STRONG / BASE_FLOW_GATE) extraídos do snapshot mais recente
+      - Contagens: n_active (ACTIVE_SIGNAL) vs n_blocked (NO_SIGNAL + BLOCKED)
+      - Score médio separado por passados e bloqueados
+
+    Permite responder: "Se baixar MODERATE de X para Y, quantos sinais adicionais? Com que score médio?"
+    """
+    from datetime import timedelta
+
+    if _database is None:
+        raise HTTPException(status_code=503, detail="Database não inicializado")
+
+    now        = datetime.now(timezone.utc)
+    date_start = now - timedelta(days=days)
+
+    col = _database["scalp_snapshots"]
+
+    match_q: Dict[str, Any] = {
+        "recorded_at":      {"$gte": date_start},
+        "mode":             "ZONES",
+        "zones.active_zone": {"$exists": True, "$ne": None},
+    }
+    if symbol:
+        match_q["symbol"] = symbol.upper()
+    if zone_type:
+        match_q["zones.active_zone.type"] = zone_type.upper()
+
+    # ── Thresholds actuais — snapshot mais recente com active_params ───────────
+    threshold_q: Dict[str, Any] = {
+        "zones.active_params": {"$exists": True, "$ne": None},
+    }
+    if symbol:
+        threshold_q["symbol"] = symbol.upper()
+    latest_with_params = await col.find_one(
+        threshold_q,
+        {"zones.active_params": 1},
+        sort=[("recorded_at", -1)],
+    )
+    active_params_latest: Dict[str, Any] = {}
+    if latest_with_params:
+        active_params_latest = latest_with_params.get("zones", {}).get("active_params", {})
+
+    # ── Pipeline: score buckets por zone_type × status ─────────────────────────
+    pipeline = [
+        {"$match": match_q},
+        # Resolve score: top-level zone_score (novo) ou nested (legado)
+        {"$addFields": {
+            "_score": {
+                "$ifNull": [
+                    "$zone_score",
+                    "$zones.score_breakdown.total_score",
+                ]
+            }
+        }},
+        # Bucket 0.5pts: arredonda score para múltiplo de 0.5 mais próximo
+        {"$addFields": {
+            "_bucket": {
+                "$cond": {
+                    "if":   {"$ne": ["$_score", None]},
+                    "then": {
+                        "$multiply": [
+                            {"$round": [{"$multiply": ["$_score", 2]}, 0]},
+                            0.5,
+                        ]
+                    },
+                    "else": None,
+                }
+            }
+        }},
+        {"$group": {
+            "_id": {
+                "zone_type": "$zones.active_zone.type",
+                "status":    "$scalp_status",
+                "bucket":    "$_bucket",
+            },
+            "count":     {"$sum": 1},
+            "score_sum": {"$sum": {"$ifNull": ["$_score", 0]}},
+        }},
+        {"$sort": {"_id.zone_type": 1, "_id.bucket": 1}},
+    ]
+
+    rows = await col.aggregate(pipeline).to_list(None)
+
+    # ── Restructura: zona → {status→{bucket→count}} ─────────────────────────
+    from collections import defaultdict
+    zone_map: Dict[str, Dict] = defaultdict(lambda: {
+        "active": defaultdict(lambda: {"count": 0, "score_sum": 0.0}),
+        "blocked": defaultdict(lambda: {"count": 0, "score_sum": 0.0}),
+        "no_score": {"active": 0, "blocked": 0},
+    })
+
+    _active_statuses  = {"ACTIVE_SIGNAL"}
+    _blocked_statuses = {"NO_SIGNAL", "BLOCKED", "HARD_STOP", "D30_BLOCKED", "MARKET_CLOSED"}
+
+    for row in rows:
+        zt     = row["_id"].get("zone_type") or "UNKNOWN"
+        status = row["_id"].get("status") or "UNKNOWN"
+        bucket = row["_id"].get("bucket")
+        cnt    = row["count"]
+        ssum   = row.get("score_sum", 0.0)
+
+        bucket_key  = "active" if status in _active_statuses else "blocked"
+        if bucket is None:
+            zone_map[zt]["no_score"][bucket_key] += cnt
+        else:
+            zone_map[zt][bucket_key][bucket]["count"]     += cnt
+            zone_map[zt][bucket_key][bucket]["score_sum"] += ssum
+
+    # ── Formata resposta ─────────────────────────────────────────────────────
+    zones_out = []
+    for zt, zm in sorted(zone_map.items()):
+        active_data  = zm["active"]
+        blocked_data = zm["blocked"]
+
+        # União de todos os buckets
+        all_buckets = sorted(set(list(active_data.keys()) + list(blocked_data.keys())))
+
+        buckets_list = []
+        for b in all_buckets:
+            a_cnt  = active_data[b]["count"]
+            bl_cnt = blocked_data[b]["count"]
+            total  = a_cnt + bl_cnt
+            buckets_list.append({
+                "bucket":    round(float(b), 1),
+                "n_active":  a_cnt,
+                "n_blocked": bl_cnt,
+                "n_total":   total,
+            })
+
+        n_active_total  = sum(d["count"] for d in active_data.values())
+        n_blocked_total = sum(d["count"] for d in blocked_data.values())
+
+        # Score médio por grupo
+        active_sum  = sum(d["score_sum"] for d in active_data.values())
+        blocked_sum = sum(d["score_sum"] for d in blocked_data.values())
+        avg_active  = round(active_sum  / n_active_total,  2) if n_active_total  else None
+        avg_blocked = round(blocked_sum / n_blocked_total, 2) if n_blocked_total else None
+
+        # Sinais bloqueados com score ≥ MODERATE threshold (oportunidades perdidas estimadas)
+        mod_thresh = float(active_params_latest.get("score_moderate", 2.5))
+        str_thresh = float(active_params_latest.get("score_strong", 4.0))
+        marginal_blocked = sum(
+            d["count"]
+            for bucket_val, d in blocked_data.items()
+            if bucket_val is not None and float(bucket_val) >= mod_thresh
+        )
+
+        zones_out.append({
+            "zone_type":       zt,
+            "n_total":         n_active_total + n_blocked_total,
+            "n_active":        n_active_total,
+            "n_blocked":       n_blocked_total,
+            "n_no_score":      zm["no_score"],
+            "avg_score_active":  avg_active,
+            "avg_score_blocked": avg_blocked,
+            "marginal_blocked":  marginal_blocked,  # bloqueados ≥ MODERATE (com score)
+            "score_buckets":   buckets_list,
+        })
+
+    return {
+        "days":      days,
+        "symbol":    symbol.upper() if symbol else "ALL",
+        "zone_type": zone_type,
+        "thresholds": {
+            "score_moderate":  active_params_latest.get("score_moderate", 2.5),
+            "score_strong":    active_params_latest.get("score_strong",   4.0),
+            "base_flow_gate":  active_params_latest.get("base_flow_gate", 1.2),
+            "ofi_slow_fade":   active_params_latest.get("ofi_slow_fade",  0.55),
+            "d30_threshold":   active_params_latest.get("d30_threshold",  20.0),
+        },
+        "zones": zones_out,
+        "total_zones": len(zones_out),
+        "note": "score_buckets com bucket=None não incluídos (legado sem score_breakdown).",
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # BACKUP — GitHub automático
 # ══════════════════════════════════════════════════════════════════════════════
 

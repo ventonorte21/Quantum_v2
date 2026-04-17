@@ -124,6 +124,7 @@ def build_scalp_snapshot_document(symbol: str, sig_dict: Dict[str, Any]) -> Dict
         "s3_action":    (s3.get("action") or "").upper() or None,
         "last_price":   ind.get("last_price"),
         "zone_quality": _norm_q(zn.get("quality")),
+        "zone_score":   (zn.get("score_breakdown") or {}).get("total_score"),
 
         # ── S1 completo ───────────────────────────────────────────────────────
         "s1": {
@@ -224,6 +225,7 @@ def build_scalp_snapshot_document(symbol: str, sig_dict: Dict[str, Any]) -> Dict
             "nearby":              zn.get("nearby", []),
             "s3_extra":            zn.get("s3_extra", {}),
             "score_breakdown":     zn.get("score_breakdown"),
+            "active_params":       zn.get("active_params"),
             # F7: Gate 5 (EMA_PRICE_COOLDOWN) e Gate 6 (EMA_ZONE_TYPE_COOLDOWN)
             # Vazio quando sem bloqueio EMA. Duplicado em s2.ema_block_reasons.
             # Mantido em zones para backward-compat com snapshots anteriores.

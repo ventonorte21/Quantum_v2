@@ -228,6 +228,7 @@ class ScalpSignal:
         self.zone_quality: Optional[str] = None        # STRONG | MODERATE | WEAK
         self.zone_s3_extra: Dict[str, Any] = {}        # campos adicionais do s3 de zonas
         self.zone_score_breakdown: Optional[Dict] = None  # ScoreBreakdown serializado
+        self.zone_active_params: Optional[Dict] = None   # Params activos na avaliação (auditoria)
 
         # Macro context — Term Structure + Gamma (ZONES mode; vazio em FLOW/CANDLE)
         self.macro_context: Dict[str, Any] = {}        # ts_ratio/ts_state/gamma_regime/call_wall/…
@@ -325,6 +326,7 @@ class ScalpSignal:
                 "nearby":           self.zones_nearby,
                 "s3_extra":         self.zone_s3_extra,
                 "score_breakdown":  self.zone_score_breakdown,
+                "active_params":    self.zone_active_params,
                 "price_vs_rth_open": self.price_vs_rth_open,  # Item 5
                 "regime_bias":       self.regime_bias,          # Item 5
                 "regime_cvd_conf":   self.regime_cvd_conf,      # Item 6
@@ -1325,6 +1327,7 @@ class ScalpEngine:
                 signal.s2_block_reasons     = zones_result.get("block_reasons", [])
                 signal.s2_passed            = (zones_result.get("status") == "ACTIVE_SIGNAL")
                 signal.zone_score_breakdown = zones_result.get("score_breakdown")
+                signal.zone_active_params   = zones_result.get("active_params")
                 # F7: Gate 5 (EMA_PRICE_COOLDOWN) e Gate 6 (EMA_ZONE_TYPE_COOLDOWN)
                 signal.ema_block_reasons    = zones_result.get("ema_block_reasons", [])
                 # F5-2-B: SHORT_GAMMA suppression tracking

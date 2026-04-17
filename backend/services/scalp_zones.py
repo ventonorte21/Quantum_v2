@@ -86,6 +86,14 @@ logger = logging.getLogger("scalp_zones")
 TICK_SIZE    = 0.25
 ATR_FALLBACK = {'MNQ': 5.0, 'MES': 2.0}
 
+# Cap máximo de SL por tipo de zona × símbolo — evita stops desproporcionais em dias de ATR elevado
+# Derivado de análise empírica: SIGMA2_FADE_BUY MNQ avg SL wins=4.38pts, losses=10.62pts
+# Cap a 6pts para MNQ (≈1.4× avg win SL) e 2.5pts para MES
+ZONE_SL_MAX_PTS: Dict[str, Dict[str, float]] = {
+    'SIGMA2_FADE_BUY':  {'MNQ': 6.0, 'MES': 2.5},
+    'SIGMA2_FADE_SELL': {'MNQ': 6.0, 'MES': 2.5},
+}
+
 # ── Fase 2-1: Tetos absolutos de tolerância por símbolo ──────────────────────
 TOLERANCE_CAPS: Dict[str, Dict[str, float]] = {
     'MNQ': {'vwap': 3.0, 'vp': 2.5, 'on': 2.0, 'ib': 2.0, 'gamma': 2.5},  # 1-B: 4.0→2.5
@@ -640,7 +648,7 @@ LATE_SESSION_PENALTY = -0.5   # penalidade suave em sessão tardia (liquidez red
 # estruturais de bónus (confluence_boost e gamma_modifier positivo) possam ser aplicados.
 # Penalidades negativas (gamma_modifier < 0) continuam a aplicar-se abaixo do gate —
 # punir um trade de fluxo fraco que também tem gamma contra é protecção, não inflação.
-BASE_FLOW_GATE: float = 1.5
+BASE_FLOW_GATE: float = 1.2
 
 # ── F3-1: Confluence Score Boost ─────────────────────────────────────────────
 CONFLUENCE_BOOST_PTS:  float = 1.5  # bonus quando ≥2 zonas alinhadas sobrepostas em in_zone
@@ -1760,6 +1768,13 @@ def compute_zone_s3(
 
     sl_pts = round(zone.sl_atr_mult * atr_eff, 2)
     be_pts = round(zone.be_atr_mult * atr_eff, 2)
+
+    # Cap de SL por zona — impede stops desproporcionais em dias de ATR elevado
+    _zone_type_str = zone.zone_type.value if hasattr(zone.zone_type, 'value') else str(zone.zone_type)
+    _sl_cap = ZONE_SL_MAX_PTS.get(_zone_type_str, {}).get(symbol)
+    if _sl_cap and sl_pts > _sl_cap:
+        sl_pts = _sl_cap
+        be_pts = min(be_pts, sl_pts * 0.7)
 
     min_tp_pts = {'MNQ': 2.0, 'MES': 1.0}.get(symbol, 2.0)
     max_tp_pts = {'MNQ': 25.0, 'MES': 10.0}.get(symbol, 25.0)

@@ -1488,6 +1488,7 @@ function FunnelPanel() {
   const [paData, setPaData]       = useState(null);
   const [paLoading, setPaLoading] = useState(false);
   const [showPa, setShowPa]       = useState(true);
+  const [paCompExp, setPaCompExp] = useState({});  // zone_type → bool (componentes expanded)
 
   const fetchFunnel = useCallback(async () => {
     setLoading(true); setError(null);
@@ -2352,19 +2353,35 @@ function FunnelPanel() {
                   </div>
 
                   {zones.map(z => {
-                    const buckets = z.score_buckets || [];
-                    const maxN    = Math.max(...buckets.map(b => b.n_total), 1);
+                    const buckets  = z.score_buckets || [];
+                    const maxN     = Math.max(...buckets.map(b => b.n_total), 1);
+                    const compExp  = !!paCompExp[z.zone_type];
+                    const comps    = z.components || {};
                     return (
                       <div key={z.zone_type} className="border border-zinc-800/60 bg-zinc-900/40 p-2">
                         {/* Cabeçalho zona */}
                         <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                           <span className="text-[10px] font-bold text-zinc-300">{z.zone_type}</span>
-                          <span className="flex gap-2 text-[9px] flex-wrap">
-                            <span className="text-emerald-400" title="Passaram S2 (ACTIVE_SIGNAL)">✓ {z.n_active} activos</span>
-                            <span className="text-red-400/70" title="Bloqueados S2">✗ {z.n_blocked} bloqueados</span>
+                          <span className="flex gap-2 text-[9px] flex-wrap items-center">
+                            <span className="text-emerald-400" title="Passaram S2 (ACTIVE_SIGNAL)">✓ {z.n_active}</span>
+                            <span className="text-red-400/70" title="Bloqueados S2">✗ {z.n_blocked}</span>
+                            {z.zone_wr_pct != null && (
+                              <span
+                                className={`font-bold ${z.zone_wr_pct >= 55 ? "text-emerald-400" : z.zone_wr_pct >= 45 ? "text-yellow-400" : "text-red-400"}`}
+                                title={`WR benchmark ${paData?.window_min ?? 30}min (${z.zone_n_outcomes} outcomes)`}
+                              >
+                                WR {z.zone_wr_pct}%
+                              </span>
+                            )}
+                            {z.zone_avg_pnl_pts != null && (
+                              <span className={`text-zinc-500 ${z.zone_avg_pnl_pts > 0 ? "text-emerald-600" : "text-red-600"}`}
+                                title="Avg pnl benchmark (pts)">
+                                {z.zone_avg_pnl_pts > 0 ? "+" : ""}{z.zone_avg_pnl_pts}pts
+                              </span>
+                            )}
                             {z.marginal_blocked > 0 && (
-                              <span className="text-yellow-400/70" title={`Bloqueados com score ≥ MODERATE threshold (${mod.toFixed(1)}) — potencial se threshold baixar`}>
-                                ⚠ {z.marginal_blocked} acima MODERATE bloqueados
+                              <span className="text-yellow-400/70" title={`${z.marginal_blocked} bloqueados com score ≥ MODERATE (${mod.toFixed(1)})`}>
+                                ⚠ {z.marginal_blocked}
                               </span>
                             )}
                           </span>
@@ -2372,19 +2389,29 @@ function FunnelPanel() {
 
                         {/* Histograma de scores */}
                         {buckets.length > 0 ? (
-                          <div className="flex items-end gap-[2px] mt-1" style={{ height: '36px' }}>
+                          <div className="flex items-end gap-[2px] mt-1" style={{ height: '40px' }}>
                             {buckets.map(b => {
-                              const heightPct  = (b.n_total / maxN) * 100;
+                              const heightPct   = (b.n_total / maxN) * 100;
                               const activeRatio = b.n_total > 0 ? b.n_active / b.n_total : 0;
-                              const bgColor    = b.bucket >= str ? "bg-emerald-500/60"
-                                              : b.bucket >= mod ? "bg-yellow-500/50"
-                                              : "bg-red-500/30";
+                              const bgColor     = b.bucket >= str ? "bg-emerald-500/60"
+                                               : b.bucket >= mod ? "bg-yellow-500/50"
+                                               : "bg-red-500/30";
+                              const wrLabel     = b.wr_pct != null ? `${b.wr_pct}%` : "";
+                              const tipText     = [
+                                `Score ${b.bucket.toFixed(1)}`,
+                                `total ${b.n_total}`,
+                                `activos ${b.n_active}`,
+                                `bloqueados ${b.n_blocked}`,
+                                b.wr_pct    != null ? `WR ${b.wr_pct}%` : "",
+                                b.avg_pnl_pts != null ? `avg ${b.avg_pnl_pts > 0 ? "+" : ""}${b.avg_pnl_pts}pts` : "",
+                                b.n_outcomes > 0 ? `(${b.n_outcomes} outcomes)` : "",
+                              ].filter(Boolean).join(" | ");
                               return (
                                 <div
                                   key={b.bucket}
                                   className="relative flex flex-col justify-end flex-shrink-0"
-                                  style={{ width: '12px', height: '36px' }}
-                                  title={`Score ${b.bucket.toFixed(1)} | total ${b.n_total} | activos ${b.n_active} | bloqueados ${b.n_blocked}`}
+                                  style={{ width: '14px', height: '40px' }}
+                                  title={tipText}
                                 >
                                   <div className={`w-full ${bgColor}`} style={{ height: `${heightPct}%` }} />
                                   {activeRatio > 0 && (
@@ -2392,6 +2419,12 @@ function FunnelPanel() {
                                       className="absolute bottom-0 w-full bg-emerald-400/80"
                                       style={{ height: `${heightPct * activeRatio}%` }}
                                     />
+                                  )}
+                                  {/* WR% label em buckets com outcomes */}
+                                  {wrLabel && heightPct > 20 && (
+                                    <div className="absolute top-0 left-0 right-0 text-center text-[6px] text-white/80 leading-none pt-[1px]">
+                                      {wrLabel}
+                                    </div>
                                   )}
                                   <div className="absolute -bottom-3 left-0 right-0 text-center text-[6px] text-zinc-600 leading-none">
                                     {b.bucket.toFixed(1)}
@@ -2404,12 +2437,69 @@ function FunnelPanel() {
                           <span className="text-[9px] text-zinc-600">sem score_breakdown (legado)</span>
                         )}
 
-                        {/* Score médio linha */}
-                        <div className="mt-4 flex gap-3 text-[9px] text-zinc-500 flex-wrap">
-                          {z.avg_score_active  != null && <span>Avg activo: <span className="text-emerald-400 font-semibold">{z.avg_score_active.toFixed(2)}</span></span>}
-                          {z.avg_score_blocked != null && <span>Avg bloqueado: <span className="text-red-400">{z.avg_score_blocked.toFixed(2)}</span></span>}
-                          <span className="text-zinc-700">N total: {z.n_total}</span>
+                        {/* Score médio + toggle componentes */}
+                        <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex gap-3 text-[9px] text-zinc-500 flex-wrap">
+                            {z.avg_score_active  != null && <span>Avg activo: <span className="text-emerald-400 font-semibold">{z.avg_score_active.toFixed(2)}</span></span>}
+                            {z.avg_score_blocked != null && <span>Avg bloqueado: <span className="text-red-400">{z.avg_score_blocked.toFixed(2)}</span></span>}
+                            <span className="text-zinc-700">N {z.n_total}</span>
+                          </div>
+                          {Object.keys(comps).length > 0 && (
+                            <button
+                              onClick={() => setPaCompExp(prev => ({...prev, [z.zone_type]: !prev[z.zone_type]}))}
+                              className="text-[8px] text-teal-500/70 hover:text-teal-400 border border-teal-500/20 px-1.5 py-0.5 transition-all">
+                              {compExp ? "▲ componentes" : "▼ componentes"}
+                            </button>
+                          )}
                         </div>
+
+                        {/* Tabela de componentes do score_breakdown */}
+                        {compExp && Object.keys(comps).length > 0 && (
+                          <div className="mt-2 border-t border-zinc-800/40 pt-2">
+                            <table className="w-full text-[8px] font-mono">
+                              <thead>
+                                <tr className="text-zinc-600 border-b border-zinc-800/30">
+                                  <th className="text-left pb-1 pr-2">Grupo</th>
+                                  <th className="text-right pr-1">N</th>
+                                  <th className="text-right pr-1" title="base_score (OFI fast)">base</th>
+                                  <th className="text-right pr-1" title="ofi_slow_modifier">ofi_slow</th>
+                                  <th className="text-right pr-1" title="confluence_boost">conf</th>
+                                  <th className="text-right pr-1" title="gamma_modifier">gamma</th>
+                                  <th className="text-right pr-1" title="ofi_slow_fade_bonus">fade_b</th>
+                                  <th className="text-right pr-1" title="total_score">total</th>
+                                  <th className="text-right" title="% sinais onde base_flow foi insuficiente (BFG gate)">BFG%</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {["active","marginal","below"].map(grp => {
+                                  const c = comps[grp];
+                                  if (!c) return null;
+                                  const grpColor = grp === "active" ? "text-emerald-400"
+                                                 : grp === "marginal" ? "text-yellow-400"
+                                                 : "text-zinc-500";
+                                  const fmt = v => v != null ? (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2)) : "–";
+                                  const fmtN = v => v != null ? v.toFixed(2) : "–";
+                                  return (
+                                    <tr key={grp} className="border-b border-zinc-800/20">
+                                      <td className={`pr-2 py-0.5 font-bold ${grpColor}`}>{grp}</td>
+                                      <td className="text-right pr-1 text-zinc-500">{c.count}</td>
+                                      <td className={`text-right pr-1 ${(c.avg_base_score ?? 0) > 0 ? "text-emerald-600" : "text-red-600"}`}>{fmtN(c.avg_base_score)}</td>
+                                      <td className={`text-right pr-1 ${(c.avg_ofi_slow ?? 0) >= 0 ? "text-zinc-400" : "text-red-500"}`}>{fmt(c.avg_ofi_slow)}</td>
+                                      <td className={`text-right pr-1 ${(c.avg_confluence ?? 0) > 0 ? "text-emerald-600" : "text-zinc-600"}`}>{fmt(c.avg_confluence)}</td>
+                                      <td className={`text-right pr-1 ${(c.avg_gamma ?? 0) >= 0 ? "text-zinc-400" : "text-red-500"}`}>{fmt(c.avg_gamma)}</td>
+                                      <td className={`text-right pr-1 ${(c.avg_fade_bonus ?? 0) > 0 ? "text-emerald-600" : "text-zinc-600"}`}>{fmt(c.avg_fade_bonus)}</td>
+                                      <td className={`text-right pr-1 font-bold ${(c.avg_total ?? 0) >= mod ? "text-emerald-400" : "text-red-400"}`}>{fmtN(c.avg_total)}</td>
+                                      <td className="text-right text-zinc-500">{c.pct_bfg_gated != null ? `${c.pct_bfg_gated}%` : "–"}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                            <div className="text-[7px] text-zinc-700 mt-1">
+                              marginal = bloqueados com score ≥ {mod.toFixed(1)} | BFG% = % onde base_flow &lt; BASE_FLOW_GATE
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

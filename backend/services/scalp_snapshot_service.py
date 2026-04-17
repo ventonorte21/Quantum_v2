@@ -77,6 +77,15 @@ async def ensure_scalp_snapshot_indexes(database):
             [("symbol", 1), ("macro_context.gamma_short_suppressed", 1), ("recorded_at", -1)],
             name="sym_gamma_short_suppressed_time",
         )
+        # Param Audit: queries por mode × active_zone × zone_score
+        await col.create_index(
+            [("symbol", 1), ("mode", 1), ("scalp_status", 1), ("zone_score", -1)],
+            name="sym_mode_status_score",
+        )
+        await col.create_index(
+            [("symbol", 1), ("mode", 1), ("zones.active_zone", 1), ("zone_score", -1)],
+            name="sym_mode_active_zone_score",
+        )
         logger.info("Scalp snapshot indexes ensured on scalp_snapshots collection")
     except Exception as e:
         logger.warning(f"Scalp snapshot index creation (may already exist): {e}")

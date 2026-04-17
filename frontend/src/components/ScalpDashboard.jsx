@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, Fragment } from "react";
 import axios from "axios";
 import {
   Lightning, ArrowUp, ArrowDown, Minus, Warning,
@@ -2162,7 +2162,7 @@ function FunnelPanel() {
                             const n2wr     = n2.wr_pct;
                             const rowBg    = n2wr == null ? "" : n2wr >= 60 ? "bg-emerald-500/5" : n2wr <= 35 ? "bg-red-500/5" : "";
                             return (
-                              <React.Fragment key={i}>
+                              <Fragment key={i}>
                                 <tr
                                   className={`border-b border-violet-500/5 hover:bg-violet-500/5 cursor-pointer ${rowBg}`}
                                   onClick={() => setZoExpanded(prev => ({...prev, [gk]: !prev[gk]}))}>
@@ -2233,7 +2233,7 @@ function FunnelPanel() {
                                     </td>
                                   </tr>
                                 )}
-                              </React.Fragment>
+                              </Fragment>
                             );
                           })}
                         </tbody>

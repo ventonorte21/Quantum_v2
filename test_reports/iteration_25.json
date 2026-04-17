@@ -1,0 +1,84 @@
+{
+  "summary": "Gamma/ZGL scoring fix in N1 Macro Score verified. All 10 backend tests passed (100%). Frontend verified: N1 Market Regime panel renders correctly with Gamma/ZGL score breakdown showing correct format (SENTIMENT/ZGL_SIGNAL) and points (0-3). TICK Index panel correctly removed. No console errors.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ — N1 score_breakdown contains Gamma/ZGL item",
+    "✅ GET /api/v3/signal/MES — N1 score_breakdown contains Gamma/ZGL item",
+    "✅ Gamma/ZGL value format is 'SENTIMENT/ZGL_SIGNAL' (e.g., 'POSITIVE/BELOW_ZGL')",
+    "✅ Gamma pts range is 0-3 with max=3",
+    "✅ N1 macro_score is <= 13 and >= 0",
+    "✅ N1 regime is one of 5 valid: COMPLACENCIA, BULL, TRANSICAO, BEAR, CAPITULACAO",
+    "✅ N1 has required fields: target_symbol, tactic, lot_pct, direction",
+    "✅ N2 has 'passed' boolean field",
+    "✅ N3 has 'action' field (BUY/SELL/WAIT)",
+    "✅ Gamma scoring logic verified: POSITIVE/BELOW_ZGL = 2 pts, NEGATIVE/ABOVE_ZGL = 1 pt",
+    "✅ real_gamma data in /api/analyze has sentiment and zgl_signal fields",
+    "✅ Frontend N1 Market Regime panel renders correctly",
+    "✅ Frontend Gamma panel shows sentiment badge, net GEX, ZGL, put/call walls",
+    "✅ Frontend V3 hero shows Gamma/ZGL score breakdown (e.g., 2/3)",
+    "✅ TICK Index panel correctly removed from frontend"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_gamma_scoring.py",
+    "/app/test_reports/pytest/pytest_gamma_scoring_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_gamma_scoring.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None - using simulated weekend data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Gamma/ZGL scoring fix fully tested. The bug was that the old code compared with non-existent strings ('STRONG_BULLISH', 'BULLISH') that were never produced by get_gamma_exposure(). Fixed to use real fields: sentiment (POSITIVE/NEGATIVE) and zgl_signal (ABOVE_ZGL/BELOW_ZGL/NEUTRAL). Scoring: POSITIVE+ABOVE_ZGL=3pts, POSITIVE+other=2pts, any+ABOVE_ZGL=1pt, NEGATIVE+not-ABOVE=0pts. Market is closed (weekend) so data is simulated. SignalStack orders are MOCKED in paper mode.",
+
+  "feature_verification": {
+    "gamma_scoring_fix": "Working - uses sentiment and zgl_signal correctly",
+    "gamma_breakdown_format": "Working - shows 'SENTIMENT/ZGL_SIGNAL' format",
+    "gamma_pts_range": "Working - 0-3 points based on combo",
+    "n1_macro_score": "Working - 0-13 range",
+    "n1_regime_detection": "Working - 5 valid regimes",
+    "n1_required_fields": "Working - target_symbol, tactic, lot_pct, direction",
+    "n2_passed_field": "Working - boolean at N2 root level",
+    "n3_action_field": "Working - BUY/SELL/WAIT",
+    "frontend_gamma_panel": "Working - shows all gamma data",
+    "tick_panel_removed": "Confirmed - not in frontend"
+  },
+
+  "observed_values": {
+    "regime": "TRANSICAO",
+    "macro_score": "6-7/13 (varies with simulated data)",
+    "gamma_value_example": "POSITIVE/BELOW_ZGL or NEGATIVE/ABOVE_ZGL",
+    "gamma_pts_example": "1-2 pts (varies)",
+    "n3_action": "WAIT or BUY (varies)",
+    "data_source": "simulated (weekend)"
+  },
+
+  "mocked_api_note": "DataBento live trades simulated on weekends. SignalStack orders are MOCKED in paper mode."
+}

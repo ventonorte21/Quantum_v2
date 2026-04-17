@@ -1,0 +1,96 @@
+{
+  "summary": "TREND Archetype TP Suppression Fix - All 17 tests passed. Verified: (1) TREND trades do NOT send TP Limit orders in both code paths, (2) RANGE and FADE trades still send TP Limit with full quantity, (3) Scale-Out quantity is exactly 50% of total, (4) Scale-Out has move_stop_automated: False, (5) position_manager.py still calculates theoretical take_profit for TREND (suppression at webhook level only).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ REGIME_TO_ARCHETYPE mapping correct: COMPLACENCIA/BULL/BEAR→TREND, TRANSICAO→RANGE, CAPITULACAO→FADE",
+    "✅ get_archetype() returns correct archetype for all regimes",
+    "✅ TREND calculate_position_params returns theoretical take_profit (suppression at webhook level)",
+    "✅ TREND scale_out config: enabled=True, pct=50, trigger_multiple=2.0, move_stop_to_entry=True",
+    "✅ RANGE has fixed take_profit at POC, no scale_out",
+    "✅ FADE has fixed take_profit at VWAP -1σ, no scale_out",
+    "✅ V3 signal endpoint returns regime in nivel_1 (TRANSICAO currently)",
+    "✅ Path 1 (execute_v3_signal) has 'arch != Arch.TREND' condition for TP suppression",
+    "✅ Path 2 (open_position_with_signalstack) has 'arch_val != TREND' condition for TP suppression",
+    "✅ Scale-out quantity calculation: Path 1 uses 'so_qty = max(1, quantity // 2)', Path 2 uses scale_out_cfg['pct']",
+    "✅ Backend health check passed",
+    "✅ position_manager.py imports successfully",
+    "✅ All TREND regimes (COMPLACENCIA, BULL, BEAR) suppress TP",
+    "✅ RANGE regime (TRANSICAO) sends TP",
+    "✅ FADE regime (CAPITULACAO) sends TP",
+    "✅ Scale-out only configured for TREND archetype",
+    "✅ Scale-out quantity is 50% of total"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_trend_tp_suppression.py",
+    "/app/test_reports/pytest/pytest_trend_tp_suppression.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Path 1 (execute_v3_signal ~line 5662): Correctly checks 'arch != Arch.TREND' before sending TP Limit",
+    "Path 2 (open_position_with_signalstack ~line 5926): Correctly checks 'arch_val != TREND' before sending TP Limit",
+    "Both paths log 'TREND: TP Limit suprimido (trailing stop cuida da saida)' when TP is suppressed",
+    "Scale-out correctly uses partial quantity (50%) not full quantity",
+    "Scale-out has 'move_stop_automated': False indicating Fill Monitor service needed for future automation",
+    "position_manager.py still calculates theoretical take_profit for TREND (used for logging/reference)"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_trend_tp_suppression.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Auth not required for position_manager tests (direct imports)"
+  },
+
+  "seed_data_creation": "None - tests use direct imports and API calls",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "TREND TP Suppression fix verified. Key code locations: (1) server.py line 5662 - 'arch != Arch.TREND' condition in execute_v3_signal, (2) server.py line 5926 - 'arch_val != TREND' condition in open_position_with_signalstack. Both paths suppress TP Limit for TREND archetype (COMPLACENCIA, BULL, BEAR regimes). RANGE (TRANSICAO) and FADE (CAPITULACAO) still send TP Limit. Scale-out is TREND-only with 50% quantity. position_manager.py still calculates theoretical take_profit for TREND (suppression happens at webhook send level only).",
+
+  "feature_verification": {
+    "path1_trend_tp_suppression": "Working - 'arch != Arch.TREND' condition at line 5662",
+    "path2_trend_tp_suppression": "Working - 'arch_val != TREND' condition at line 5926",
+    "range_tp_sent": "Working - TRANSICAO sends TP Limit with full quantity",
+    "fade_tp_sent": "Working - CAPITULACAO sends TP Limit with full quantity",
+    "scale_out_quantity": "Working - 50% of total (max(1, quantity // 2))",
+    "scale_out_move_stop_automated": "Working - set to False (requires Fill Monitor)",
+    "position_manager_theoretical_tp": "Working - still calculates take_profit for TREND (suppression at webhook level)"
+  },
+
+  "code_paths_verified": {
+    "execute_v3_signal": {
+      "location": "server.py ~line 5596-5710",
+      "tp_suppression_condition": "arch != Arch.TREND (line 5662)",
+      "scale_out_quantity": "so_qty = max(1, quantity // 2) (line 5686)"
+    },
+    "open_position_with_signalstack": {
+      "location": "server.py ~line 5870-5975",
+      "tp_suppression_condition": "arch_val != 'TREND' (line 5926)",
+      "scale_out_quantity": "so_qty = max(1, quantity * scale_out_cfg['pct'] // 100) (line 5943)"
+    }
+  },
+
+  "mocked_api_note": "SignalStack webhooks are MOCKED in Paper Mode. Tests verify logic flow, not actual webhook delivery."
+}

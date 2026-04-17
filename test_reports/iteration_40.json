@@ -1,0 +1,119 @@
+{
+  "summary": "Replay Engine Dynamic Signal Re-Evaluation - All 15 backend tests passed, all frontend UI elements verified. The new DYNAMIC signal mode correctly re-evaluates signals against configurable thresholds (zscore_min, delta_ratio_min, ofi_threshold per regime). STATIC mode maintains legacy behavior. eval_stats response includes all required fields (total_evaluated, dynamic_accepted, dynamic_filtered, static_fallback, session_filtered, by_source). Frontend shows signal mode toggle, threshold grids, and eval_stats display correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/replay/defaults returns signal_mode field (DYNAMIC/STATIC)",
+    "✅ GET /api/replay/defaults returns zscore_min with all 5 regimes (COMPLACENCIA, BULL, BEAR, TRANSICAO, CAPITULACAO)",
+    "✅ GET /api/replay/defaults returns delta_ratio_min with all 5 regimes",
+    "✅ GET /api/replay/defaults returns ofi_threshold with all 5 regimes",
+    "✅ GET /api/replay/defaults returns rr_min_atr_mult",
+    "✅ GET /api/replay/defaults returns require_volume_significance (boolean)",
+    "✅ GET /api/replay/defaults returns session_start_hour and session_end_hour",
+    "✅ POST /api/replay/run with signal_mode=DYNAMIC returns eval_stats with all required fields",
+    "✅ POST /api/replay/run with signal_mode=DYNAMIC has dynamic_accepted > 0 with relaxed thresholds",
+    "✅ POST /api/replay/run with signal_mode=STATIC maintains legacy behavior (no dynamic re-evaluation)",
+    "✅ POST /api/replay/run with relaxed thresholds (zscore_min TRANSICAO=0.1, delta_ratio_min TRANSICAO=0.01) generates MORE accepted signals",
+    "✅ POST /api/replay/run with ultra-strict thresholds (zscore_min TRANSICAO=5.0) generates FEWER/ZERO accepted signals",
+    "✅ POST /api/replay/run with require_volume_significance=true filters more signals than false",
+    "✅ eval_stats has complete structure: total_evaluated, dynamic_accepted, dynamic_filtered, static_fallback, session_filtered, by_source",
+    "✅ Session filter (session_start_hour, session_end_hour) reduces signals when active",
+    "✅ Frontend: Signal mode toggle (DYNAMIC/STATIC) works correctly",
+    "✅ Frontend: Threshold grids (Z-Score, Delta Ratio, OFI) show 5 regime columns each",
+    "✅ Frontend: Threshold grids hidden when STATIC mode selected",
+    "✅ Frontend: R:R min ATR mult input present",
+    "✅ Frontend: Volume Significance toggle present",
+    "✅ Frontend: Session filter inputs (start/end hour) present",
+    "✅ Frontend: eval_stats badge shows in header after replay execution",
+    "✅ Frontend: eval_stats panel shows detailed breakdown (Avaliados, Aceitos, Filtrados, Fallback, by_source)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_replay_dynamic_signal.py",
+    "/app/test_reports/pytest/pytest_replay_dynamic_signal.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Dynamic signal re-evaluation implementation is complete and well-structured",
+    "extract_raw_signals() correctly handles 3 data sources: n2_signal (enriched), dz_n2 (intermediate), legacy_parse (regex from n3.reason)",
+    "reevaluate_signal() correctly applies per-regime thresholds for Z-Score, Delta Ratio, and OFI",
+    "TRANSICAO regime correctly handles rejection logic (VAH→SELL, VAL→BUY) with R:R viability check",
+    "Frontend ConfigPanel correctly shows/hides threshold grids based on signal_mode",
+    "eval_stats tracking is comprehensive with by_source breakdown"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_replay_dynamic_signal.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and frontend tests"
+  },
+
+  "seed_data_creation": "None - tests use live v3_snapshots collection (776+ snapshots, 108 actionable signals)",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Replay Engine Dynamic Signal Re-Evaluation fully tested. Key new features: signal_mode (DYNAMIC/STATIC), zscore_min/delta_ratio_min/ofi_threshold per regime, rr_min_atr_mult, require_volume_significance, session_start_hour/session_end_hour. eval_stats response includes total_evaluated, dynamic_accepted, dynamic_filtered, static_fallback, session_filtered, by_source. Test file: /app/backend/tests/test_replay_dynamic_signal.py. MongoDB: v3_snapshots has 162 enriched n2_signal, 394 dz_n2 levels, 356 legacy (parsed from n3.reason). All TRANSICAO regime.",
+
+  "feature_verification": {
+    "GET /api/replay/defaults - new fields": "Working - returns signal_mode, zscore_min, delta_ratio_min, ofi_threshold, rr_min_atr_mult, require_volume_significance, session_start_hour, session_end_hour",
+    "POST /api/replay/run signal_mode=DYNAMIC": "Working - re-evaluates signals against thresholds, returns eval_stats",
+    "POST /api/replay/run signal_mode=STATIC": "Working - uses original snapshot actions, no dynamic re-evaluation",
+    "Relaxed thresholds generate more trades": "Working - zscore_min TRANSICAO=0.1, delta_ratio_min TRANSICAO=0.01 accepts more signals",
+    "Strict thresholds generate fewer trades": "Working - zscore_min TRANSICAO=5.0 filters most signals",
+    "require_volume_significance filter": "Working - true filters more signals than false",
+    "eval_stats structure": "Working - all required fields present with correct types",
+    "Frontend signal mode toggle": "Working - DYNAMIC/STATIC toggle shows/hides threshold grids",
+    "Frontend threshold grids": "Working - Z-Score, Delta Ratio, OFI grids with 5 regime columns each",
+    "Frontend eval_stats display": "Working - badge in header, detailed panel with by_source breakdown"
+  },
+
+  "sample_run_data": {
+    "dynamic_mode": {
+      "run_id": "example",
+      "eval_stats": {
+        "total_evaluated": 289,
+        "dynamic_accepted": 14,
+        "dynamic_filtered": 275,
+        "static_fallback": 0,
+        "session_filtered": 0,
+        "by_source": {"n2_signal": 0, "dz_n2": 0, "legacy_parse": 289, "none": 0}
+      },
+      "trades": 14,
+      "total_pnl": 180
+    },
+    "static_mode": {
+      "eval_stats": {
+        "total_evaluated": 0,
+        "dynamic_accepted": 0,
+        "dynamic_filtered": 0,
+        "static_fallback": 0
+      },
+      "trades": 15,
+      "total_pnl": 169
+    }
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All replay tests use live endpoints and MongoDB."
+}

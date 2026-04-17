@@ -1,0 +1,65 @@
+{
+  "summary": "Completed comprehensive testing of trading model dashboard for micro futures (MNQ, MES, MYM, M2K). All backend APIs and frontend functionality working correctly with predictive and confirmatory indicators, confluence/confidence scoring, and multi-timeframe analysis.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "component": "TradingView Chart",
+        "issue": "Minor telemetry request failure (net::ERR_ABORTED) for TradingView analytics - does not affect functionality",
+        "affected_selectors": ["iframe[data-testid='tradingview-chart']"],
+        "fix_priority": "LOW"
+      }
+    ]
+  },
+  
+  "passed_tests": [
+    "Backend API /api/health returns healthy status",
+    "Backend API /api/symbols returns all 4 symbols (MNQ, MES, MYM, M2K)",
+    "Backend API /api/analyze returns confluence and confidence scores",
+    "Backend API /api/signals/{symbol} returns trading signals",
+    "Backend API /api/backtest runs backtest and returns results",
+    "Backend API /api/market-data returns OHLCV data",
+    "Frontend loads with asset selection sidebar",
+    "Frontend shows confluence score with threshold indicator (60%)",
+    "Frontend shows confidence score with threshold indicator (50%)",
+    "Frontend displays all predictive indicators (RSI, MACD, EMA, Bollinger, Stochastic, ADX, ATR)",
+    "Frontend displays all confirmatory indicators (Volume, OBV, VWAP, GAMMA, VIX)",
+    "Frontend shows MTF confluence section with signal strength",
+    "Frontend timeframe selection works (4H, 1H, 5M)",
+    "Frontend asset selection works (clicking symbols updates data)",
+    "Frontend refresh analysis button works",
+    "Frontend backtest functionality works with results display",
+    "Frontend indicator expansion/collapse works",
+    "Frontend real-time data updates work",
+    "TradingView chart integration works",
+    "Loading overlays and error handling work"
+  ],
+  
+  "test_report_links": [
+    "/app/backend_test.py",
+    "/root/.emergent/automation_output/20260404_185315/console_20260404_185315.log"
+  ],
+  
+  "action_item_for_main_agent": "",
+  
+  "updated_files": [
+    "/app/backend_test.py"
+  ],
+  
+  "success_percentage": {
+    "backend": "100% (6/6 endpoints working)",
+    "frontend": "100% (all UI components and interactions working)",
+    "integration": "100% (frontend-backend communication working)",
+    "overall": "100%"
+  },
+  
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "false"
+}

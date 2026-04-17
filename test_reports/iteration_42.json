@@ -1,0 +1,100 @@
+{
+  "summary": "Walk-Forward Optimizer Phase B (Presets + Schedule) fully tested. All 15 backend API tests passed. Frontend UI verified: 4 tabs (Config, Tune, Sched, Runs) functional, Reset button with circular arrow icon, Cenarios Salvos section with save/load/delete presets, Schedule panel showing active schedule with frequency/horario/objetivo/auto-apply/proximo run.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ POST /api/replay/presets creates preset with name, config, description and returns preset_id",
+    "✅ GET /api/replay/presets lists all saved presets",
+    "✅ GET /api/replay/presets/{preset_id} returns specific preset",
+    "✅ PUT /api/replay/presets/{preset_id} updates preset name/config/description",
+    "✅ DELETE /api/replay/presets/{preset_id} deletes preset and returns 404 on re-fetch",
+    "✅ POST /api/replay/presets with duplicate name returns 409 Conflict",
+    "✅ POST /api/replay/schedule creates/updates schedule and returns next_run_at",
+    "✅ POST /api/replay/schedule with frequency=daily works correctly",
+    "✅ POST /api/replay/schedule with auto_apply=True and threshold works",
+    "✅ GET /api/replay/schedule returns active schedule configuration",
+    "✅ DELETE /api/replay/schedule disables the schedule",
+    "✅ GET /api/replay/schedule/history returns execution history",
+    "✅ GET /api/replay/defaults returns default configuration for Reset",
+    "✅ Frontend: 4 tabs (Config, Tune, Sched, Runs) visible and clickable",
+    "✅ Frontend: Reset button (circular arrow icon) next to Executar Replay button",
+    "✅ Frontend: Reset button has title='Restaurar padrao'",
+    "✅ Frontend: Cenarios Salvos section with 'Salvar' button",
+    "✅ Frontend: Existing preset 'Conservador' displayed and clickable",
+    "✅ Frontend: Save preset flow - input appears, can type name, Enter saves",
+    "✅ Frontend: Load preset updates config values (Z-Score, Delta Ratio changed)",
+    "✅ Frontend: Delete preset button appears on hover",
+    "✅ Frontend: Sched tab shows active schedule with ATIVO indicator",
+    "✅ Frontend: Schedule shows Frequencia: Semanal (Dom), Horario: 6:00 UTC",
+    "✅ Frontend: Schedule shows Objetivo: sharpe, Auto-Apply: Sim (>20%)",
+    "✅ Frontend: Schedule shows Proximo run date/time",
+    "✅ Frontend: Editar and Desativar buttons present in schedule panel"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_presets_schedule.py",
+    "/app/test_reports/pytest/pytest_presets_schedule.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Presets CRUD implementation is complete with proper duplicate name validation (409)",
+    "Schedule implementation correctly computes next_run_at based on frequency/day/hour",
+    "Scheduler runs as asyncio background task with proper cancellation handling",
+    "Frontend PresetBar component correctly fetches, saves, loads, and deletes presets",
+    "Frontend SchedulePanel shows all required fields: frequency, horario, objetivo, auto-apply, proximo run",
+    "Reset button correctly calls GET /api/replay/defaults and updates config state"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_presets_schedule.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and frontend tests"
+  },
+
+  "seed_data_creation": "None - tests create and cleanup their own TEST_ prefixed presets",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Phase B features (Presets + Schedule) fully tested. Key endpoints: POST/GET/PUT/DELETE /api/replay/presets for preset CRUD, POST/GET/DELETE /api/replay/schedule for schedule management, GET /api/replay/schedule/history for execution history. Frontend has 4 tabs in Replay Dashboard: Config (with Reset button and Cenarios Salvos), Tune (Auto-Tune), Sched (Schedule panel), Runs (history). Existing preset 'Conservador' and active weekly schedule in database. Test file: /app/backend/tests/test_presets_schedule.py",
+
+  "feature_verification": {
+    "POST /api/replay/presets": "Working - creates preset with preset_id, name, config, description",
+    "GET /api/replay/presets": "Working - lists all presets sorted by created_at desc",
+    "GET /api/replay/presets/{id}": "Working - returns specific preset, 404 if not found",
+    "PUT /api/replay/presets/{id}": "Working - updates name/config/description",
+    "DELETE /api/replay/presets/{id}": "Working - deletes preset, 404 if not found",
+    "Duplicate preset name": "Working - returns 409 Conflict",
+    "POST /api/replay/schedule": "Working - creates/updates schedule with next_run_at",
+    "GET /api/replay/schedule": "Working - returns active schedule or enabled=False message",
+    "DELETE /api/replay/schedule": "Working - disables schedule",
+    "GET /api/replay/schedule/history": "Working - returns execution history",
+    "GET /api/replay/defaults": "Working - returns default config for Reset button",
+    "Frontend Reset button": "Working - circular arrow icon, title='Restaurar padrao'",
+    "Frontend Cenarios Salvos": "Working - save/load/delete presets",
+    "Frontend Sched tab": "Working - shows active schedule with all fields"
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All preset and schedule tests use live endpoints and MongoDB."
+}

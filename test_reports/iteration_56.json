@@ -1,0 +1,93 @@
+{
+  "summary": "Cache Optimization Testing (Iteration 56) - All 8 backend tests passed. VP D-1 persistent cache, VP Session 5min cache, OFI session-aware TTL, and Macro session-aware TTL all working correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "DataBento API", "issue": "422 data_schema_not_fully_available errors (expected - handled with fallback)"},
+      {"endpoint": "yfinance ^RVX", "issue": "Symbol possibly delisted - no price data (handled with LKG fallback)"},
+      {"endpoint": "yfinance ^UST2Y", "issue": "Symbol not found - 404 error (handled with LKG fallback)"}
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ POST /api/analyze with symbol=MES,timeframe=5M returns 200 with complete data",
+    "✅ real_vix present in response (current: 25.78)",
+    "✅ session_vps present with prev_day_vp filled (POC: 6625.75, VAH: 6634.25, VAL: 6590.25)",
+    "✅ term_structure present in response",
+    "✅ Second call to /api/analyze is cache HIT (<0.2s)",
+    "✅ Third call to /api/analyze has identical prev_day_vp (VP D-1 cache persistence verified)",
+    "✅ GET /api/ofi/MES returns 200 with ofi_fast (0.0074) and ofi_slow (-0.0373)",
+    "✅ OFI source is 'databento_trades' (real data, not simulated)",
+    "✅ GET /api/session-vps/MES returns 200 with prev_day_vp.poc > 0",
+    "✅ No _get_macro_ttl errors in backend logs after restart",
+    "✅ Macro data (VIX, term_structure) present in /api/analyze response"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_cache_optimization.py",
+    "/app/test_reports/pytest/pytest_cache_optimization.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "SessionVolumeProfileService (lines 2136-2356): VP D-1 persistent cache correctly implemented with session-based key",
+    "SessionVolumeProfileService.SESSION_VP_CACHE_TTL = 300 (5 min) for VP Session cache",
+    "OFIService (lines 1159-1175): Session-aware cache TTL (60s RTH / 120s Globex) correctly implemented",
+    "MarketVolatilityService (lines 2360-2374): Session-aware macro TTL (20min RTH / 60min Globex) correctly implemented",
+    "_get_current_session_type() helper (lines 1922-1933): Correctly detects RTH (09:30-16:00 ET weekdays) vs Globex",
+    "macro_refresh_loop (lines 8859-8920): Session-aware refresh interval (60s RTH / 120s Globex) with 80% TTL threshold"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_cache_optimization.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (8/8 pytest tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Not required for these endpoints (no auth needed)"
+  },
+
+  "seed_data_creation": "None - tests use live DataBento and yfinance data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Cache optimization features fully tested and working. Key findings: (1) VP D-1 cache is persistent per session (keyed by symbol_prev_session_start). (2) VP Session cache has 5min TTL. (3) OFI uses session-aware TTL (60s RTH / 120s Globex). (4) Macro data uses session-aware TTL (20min RTH / 60min Globex). (5) Current time is Globex session, so longer TTLs are active. (6) All endpoints return complete data with real DataBento trades. Test file: /app/backend/tests/test_cache_optimization.py",
+
+  "feature_verification": {
+    "POST /api/analyze complete data": "Working - real_vix, session_vps.prev_day_vp, term_structure all present",
+    "POST /api/analyze cache HIT": "Working - second call <0.2s (120s TTL cache)",
+    "GET /api/ofi/MES ofi_fast/ofi_slow": "Working - ofi_fast=0.0074, ofi_slow=-0.0373, source=databento_trades",
+    "GET /api/session-vps/MES prev_day_vp": "Working - POC=6625.75, VAH=6634.25, VAL=6590.25",
+    "VP D-1 cache persistence": "Working - POC identical across 3 consecutive calls",
+    "Macro data in /api/analyze": "Working - VIX current=25.78, term_structure present",
+    "No _get_macro_ttl errors": "Verified - no errors in backend logs"
+  },
+
+  "mocked_api_note": "SignalStack webhook is MOCKED. All cache optimization logic uses REAL DataBento and yfinance data.",
+
+  "current_time_context": {
+    "test_time_et": "2026-04-07 ~18:26 ET (Globex session)",
+    "session_type": "globex",
+    "active_ttls": {
+      "OFI": "120s (Globex)",
+      "Macro": "3600s (Globex)",
+      "VP_Session": "300s (5min)",
+      "VP_D1": "permanent per session"
+    }
+  }
+}

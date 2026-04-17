@@ -1,0 +1,88 @@
+{
+  "summary": "Delta Zonal V2 backend testing complete. 15/16 tests passed. All new N2/N3 features verified: interaction_quality, dz_vah/val/vwap/poc with zscore/delta_ratio/volume_significant/signal, dz_summary_status, dz_avg_delta_ratio, N3 absorption_price_limit (elastic ATR-based), Welford persistence to MongoDB, snapshot recording with dz_n2/dz_n3 data.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/v3/signal/MNQ",
+        "issue": "First request timeout (30s) - transient cold start, subsequent requests work fine (343ms)",
+        "priority": "LOW"
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ returns 200 (after warm-up)",
+    "✅ nivel_2 contains interaction_quality field with valid values",
+    "✅ nivel_2 contains dz_vah, dz_val, dz_vwap, dz_poc with zscore, delta_ratio, volume_significant, signal",
+    "✅ nivel_2 contains dz_summary_status and dz_avg_delta_ratio fields",
+    "✅ nivel_3.delta_zonal has absorption_price_limit field (elastic absorption)",
+    "✅ nivel_3.delta_zonal.levels contain delta_ratio and volume_baseline fields",
+    "✅ GET /api/v3/signal/MES returns 200",
+    "✅ MES nivel_2 has same new fields as MNQ (cross-symbol validation)",
+    "✅ MES nivel_3 has same new fields as MNQ",
+    "✅ POST /api/snapshots/record-now successfully records snapshots",
+    "✅ GET /api/snapshots/stats returns storage statistics",
+    "✅ Welford Z-Score computed and persisted (7 accumulators in MongoDB)",
+    "✅ N2 reason string contains DZ metrics (Z, Ratio)",
+    "✅ N2 has passed field (boolean)",
+    "✅ N3 absorption_limit uses ATR-based elastic formula (0.25 x ATR_M1)",
+    "✅ Backend health check passed"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_delta_zonal_v2.py",
+    "/app/test_reports/pytest/pytest_delta_zonal_v2.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Z-Scores are 0.0 for some levels - this is EXPECTED per agent context (Welford needs n>=3 crossings)",
+    "Welford warm-start from MongoDB is working (7 accumulators loaded)",
+    "Snapshot service correctly stores dz_n2 and dz_n3 data",
+    "evaluate_filters correctly consumes DZ N2 data per regime (verified via reason string)"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_delta_zonal_v2.py"
+  ],
+
+  "success_rate": {
+    "backend": "94% (15/16 tests passed, 1 transient timeout)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Auth not required for V3 signal endpoints (public API)"
+  },
+
+  "seed_data_creation": "None - tests use live API data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Delta Zonal V2 refactoring fully tested. Key endpoints: GET /api/v3/signal/{symbol} returns nivel_2 with interaction_quality, dz_vah/val/vwap/poc objects, dz_summary_status, dz_avg_delta_ratio. nivel_3.delta_zonal has absorption_price_limit (elastic ATR-based). Welford accumulators persist to MongoDB collection 'welford_stats' and warm-start on restart. Snapshots store dz_n2/dz_n3 data. Z-Scores may be 0.0 if Welford n<3 (cold start behavior).",
+
+  "feature_verification": {
+    "interaction_quality_field": "Working - returns valid values per regime",
+    "dz_levels_in_n2": "Working - dz_vah, dz_val, dz_vwap, dz_poc with all required subfields",
+    "dz_summary_fields": "Working - dz_summary_status and dz_avg_delta_ratio present",
+    "n3_absorption_price_limit": "Working - elastic ATR-based (0.25 x ATR_M1)",
+    "n3_levels_delta_ratio": "Working - delta_ratio and volume_baseline in all N3 levels",
+    "cross_symbol_validation": "Working - MES has same fields as MNQ",
+    "snapshot_recording": "Working - POST /api/snapshots/record-now records with dz_n2/dz_n3",
+    "welford_persistence": "Working - 7 accumulators in MongoDB welford_stats collection",
+    "evaluate_filters_per_regime": "Working - reason string shows DZ metrics (Z, Ratio)"
+  },
+
+  "mocked_api_note": "No mocked APIs. All endpoints use real DataBento data and MongoDB."
+}

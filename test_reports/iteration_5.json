@@ -1,0 +1,27 @@
+{
+  "summary": "Completed comprehensive testing of VXN (CBOE Nasdaq-100 Volatility Index) feature integration alongside VIX and GAMMA indicators with real data from Yahoo Finance",
+  "backend_issues": {},
+  "frontend_issues": {},
+  "passed_tests": [
+    "API /api/vxn returns real VXN data with value=27.04, regime=ELEVATED, index=NASDAQ-100, source=yahoo_finance",
+    "API /api/volatility/MNQ returns VIX, VXN and GAMMA data successfully",
+    "API /api/analyze includes real_vxn in response with complete data structure",
+    "Frontend displays VXN (REAL) panel with value, regime and change information",
+    "Frontend shows VXN - VIX spread calculation (+3.17)",
+    "VXN data fetched from Yahoo Finance using ^VXN ticker",
+    "VXN regime calculation working (ELEVATED for value 27.04)",
+    "VXN typically runs higher than VIX as expected (VXN: 27.04 vs VIX: 23.87)",
+    "All 21 backend API endpoints passing including new VXN endpoints",
+    "Frontend refresh functionality maintains VXN data display",
+    "Real-time data integration working with proper caching (5-minute cache duration)"
+  ],
+  "test_report_links": ["/app/backend_test.py"],
+  "action_item_for_main_agent": "",
+  "updated_files": ["/app/backend_test.py"],
+  "success_percentage": {
+    "backend": "100% (21/21 tests passed)",
+    "frontend": "95% (VXN panel fully functional, minor selector issues in test script)"
+  },
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "true"
+}

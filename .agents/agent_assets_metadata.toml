@@ -1,0 +1,32 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "G43woDnZkrhjBCu0rr_-L"
+uri = "file://pipeline_levantamento.jpg"
+type = "image"
+title = "Levantamento Pipeline N1 > N2 > N3 — Quantum Trading V3"
+
+[[outputs]]
+id = "F_copzW0DXlx57YnYWLNy"
+uri = "file://docs/ZONES_Module_Documentation.pdf"
+type = "pdf"
+title = "Módulo ZONES — Documentação Técnica Completa"
+
+[[outputs]]
+id = "22uXZILsEhNXOniS2bNM_"
+uri = "file://docs/ZONES_Analise_Consolidada.pdf"
+type = "pdf"
+title = "Análise Crítica Consolidada — Módulo ZONES"
+
+[[outputs]]
+id = "vQCGW_YI8PDRKKEGsM5ya"
+uri = "file://market_analysis.md"
+type = "text"
+title = "Análise Detalhada — Sessão 2026-04-13"
+
+[[outputs]]
+id = "R46roa6OFzn8r_7E7fiLi"
+uri = "file://PMT_Payload_Confirmation.md"
+type = "text"
+title = "PMT Payload Confirmation — QuantumScalp"

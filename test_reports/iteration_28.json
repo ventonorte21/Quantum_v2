@@ -1,0 +1,89 @@
+{
+  "summary": "D-1 Closing Ratio ETF→Futures feature fully verified. All 12 backend tests passed (100%). GET /api/gamma/ratio/MNQ returns ratio=41.253121, source=d1_close, futures_close=24132.25, etf_close=584.98, is_roll_period=false. GET /api/v3/signal/MNQ correctly includes gamma_ratio, gamma_ratio_source, is_roll_period in nivel_1. Frontend displays 'Ratio ETF→Futures: 41.2531x (D-1)' with correct source indicator. Roll period badge correctly NOT shown in April. Gamma fallback warning appears when yfinance is rate-limited (weekend expected behavior).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/gamma/ratio/MNQ — returns ratio=41.253121, source=d1_close, is_roll_period=false",
+    "✅ GET /api/gamma/ratio/MNQ — futures_close=24132.25, etf_close=584.98 (real D-1 values)",
+    "✅ GET /api/gamma/ratio/MES — returns ratio=10.069301, source=d1_close, contract=MES.v.0",
+    "✅ GET /api/gamma/ratio/MNQ — is_roll_period=false (correct for April)",
+    "✅ GET /api/gamma/ratio/MNQ — caching works (2nd call uses cached data)",
+    "✅ GET /api/v3/signal/MNQ — nivel_1 contains gamma_ratio (41.253121)",
+    "✅ GET /api/v3/signal/MNQ — nivel_1 contains gamma_ratio_source (d1_close)",
+    "✅ GET /api/v3/signal/MNQ — nivel_1 contains is_roll_period (false)",
+    "✅ GET /api/v3/signal/MNQ — nivel_1 contains using_fallback_gamma and gamma_warning",
+    "✅ GET /api/v3/signal/MNQ — context contains call_wall, put_wall, zgl (converted with D-1 ratio)",
+    "✅ GET /api/v3/signal/MES — also has gamma_ratio fields",
+    "✅ MongoDB caching — ratio stored with computed_for=2026-04-05",
+    "✅ Frontend: N1 Gamma panel shows 'Ratio ETF→Futures: 41.2531x (D-1)'",
+    "✅ Frontend: Roll period badge NOT visible (correct for April)",
+    "✅ Frontend: Gamma fallback warning visible when yfinance rate-limited (expected on weekend)",
+    "✅ Frontend: No console errors"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_d1_gamma_ratio.py",
+    "/app/test_reports/pytest/pytest_d1_gamma_ratio.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_d1_gamma_ratio.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None - using real DataBento D-1 close data + yfinance ETF close",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "D-1 Closing Ratio feature tested. The gamma_ratio_service fetches previous day's closing prices from DataBento (futures continuous contract .v.0) and yfinance (ETF). Ratio is cached in MongoDB gamma_ratios collection. On weekends, yfinance may be rate-limited causing gamma to fall back to price_estimated source (spot=100), which triggers using_fallback_gamma=true. The D-1 ratio itself (from DataBento) works correctly even on weekends. Roll period detection flags Mar/Jun/Sep/Dec 3rd week (days 10-21). Current month April is NOT a roll period.",
+
+  "feature_verification": {
+    "d1_ratio_endpoint": "Working - /api/gamma/ratio/{symbol} returns ratio, source, futures_close, etf_close",
+    "d1_close_source": "Working - DataBento continuous contract .v.0 provides futures D-1 close",
+    "etf_close_source": "Working - yfinance provides ETF D-1 close",
+    "mongodb_caching": "Working - ratio cached by symbol+computed_for date",
+    "in_memory_caching": "Working - second call uses cached data",
+    "roll_period_detection": "Working - is_roll_period=false for April",
+    "nivel_1_integration": "Working - gamma_ratio, gamma_ratio_source, is_roll_period in nivel_1",
+    "context_gamma_walls": "Working - call_wall, put_wall, zgl converted with D-1 ratio",
+    "frontend_ratio_display": "Working - shows 'Ratio ETF→Futures: Xx (D-1)' or '(RT)'",
+    "frontend_roll_badge": "Working - only visible when is_roll_period=true"
+  },
+
+  "observed_values": {
+    "mnq_ratio": 41.253121,
+    "mnq_futures_close": 24132.25,
+    "mnq_etf_close": 584.98,
+    "mnq_source": "d1_close",
+    "mnq_contract": "MNQ.v.0",
+    "mes_ratio": 10.069301,
+    "mes_futures_close": 6603.75,
+    "mes_etf_close": 655.83,
+    "is_roll_period": false,
+    "computed_for": "2026-04-05"
+  },
+
+  "mocked_api_note": "DataBento D-1 close is REAL data. yfinance may be rate-limited on weekends causing gamma fallback (expected behavior). The D-1 ratio calculation works correctly regardless of yfinance status."
+}

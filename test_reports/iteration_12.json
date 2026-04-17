@@ -1,0 +1,104 @@
+{
+  "summary": "Completed testing of the new 5-level Market Regime model. All 17 backend tests passed (100%). All 11 frontend tests passed (100%). The Market Regime panel correctly displays one of 5 regimes (COMPLACENCIA/BULL/TRANSICAO/BEAR/CAPITULACAO) with score X/12 format. All 4 component signals (VIX, Yield Curve, Gamma/ZGL, Term Structure) are visible. Treasury endpoint uses yfinance (US10Y/US30Y). Term Structure shows VIX/VIX3M ratio.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/signals/{symbol}",
+        "issue": "MongoDB OverflowError: 'MongoDB can only handle up to 8-byte ints' when saving signals to database. Pre-existing issue, not related to Market Regime feature.",
+        "priority": "LOW"
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/treasury returns 200 with us10y, us30y, spread, curve_state",
+    "✅ Treasury source is yahoo_finance (yfinance)",
+    "✅ GET /api/term-structure returns 200 with ratio and state fields",
+    "✅ Term Structure has vix and vix3m values",
+    "✅ POST /api/analyze returns term_structure with ratio field",
+    "✅ POST /api/analyze returns treasury with us10y, us30y, curve_state",
+    "✅ POST /api/analyze returns real_vix with value and regime",
+    "✅ POST /api/analyze returns real_gamma with net_gex and zgl_signal",
+    "✅ All 4 Market Regime signal sources present in analyze response",
+    "✅ Term Structure ratio in reasonable range (0.5-1.5)",
+    "✅ Frontend: Market Regime panel visible with data-testid='market-regime-panel'",
+    "✅ Frontend: Regime label 'TRANSICAO' is valid (one of 5 regimes)",
+    "✅ Frontend: Score format '5/12' is correct (X/12)",
+    "✅ Frontend: VIX signal present in Market Regime panel",
+    "✅ Frontend: Yield Curve signal present in Market Regime panel",
+    "✅ Frontend: Gamma/ZGL signal present in Market Regime panel",
+    "✅ Frontend: Term Structure signal present in Market Regime panel",
+    "✅ Frontend: Score bar shows all 5 segments (CAP/BEAR/TRANS/BULL/COMP)",
+    "✅ Frontend: Term Structure shows ratio value like FLAT (0.97)",
+    "✅ Frontend: Regime description text present",
+    "✅ Frontend: Term Structure panel visible in sidebar"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_market_regime.py",
+    "/app/test_reports/pytest/pytest_market_regime_results.xml"
+  ],
+
+  "action_items": [
+    "OPTIONAL: Fix /api/signals/{symbol} MongoDB overflow error (pre-existing, not blocking)"
+  ],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_market_regime.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (11/11 tests passed)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None required - uses live yfinance data for VIX, Treasury, Term Structure",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Market Regime feature fully tested. The 5-level regime model (COMPLACENCIA/BULL/TRANSICAO/BEAR/CAPITULACAO) is calculated from 4 signals: VIX (0-3 pts), Yield Curve (0-3 pts), Gamma/ZGL (0-3 pts), Term Structure (0-3 pts). Max score is 12. Thresholds: >=10 COMPLACENCIA, >=7 BULL, >=5 TRANSICAO, >=2 BEAR, <2 CAPITULACAO. Term Structure override: ratio >1.10 forces CAPITULACAO. Treasury uses yfinance (^TNX for US10Y, ^TYX for US30Y). Current observed state: TRANSICAO with score 5/12 (VIX=ELEVATED(1), Yield=NORMAL(2), Gamma=SHORT_Γ(1), TermStructure=FLAT(1)).",
+
+  "feature_verification": {
+    "treasury_endpoint": "Working - GET /api/treasury returns us10y, us30y, spread, curve_state from yfinance",
+    "term_structure_endpoint": "Working - GET /api/term-structure returns ratio, state, vix, vix3m",
+    "analyze_term_structure": "Working - POST /api/analyze includes term_structure with ratio",
+    "analyze_treasury": "Working - POST /api/analyze includes treasury with curve_state",
+    "market_regime_panel": "Working - Shows 5-level regime with X/12 score",
+    "regime_signals": "Working - All 4 signals (VIX, Yield Curve, Gamma/ZGL, Term Structure) visible",
+    "score_bar": "Working - Shows 5 segments (CAP/BEAR/TRANS/BULL/COMP)",
+    "term_structure_ratio_display": "Working - Shows format like FLAT (0.97)"
+  },
+
+  "observed_values": {
+    "regime": "TRANSICAO",
+    "score": "5/12",
+    "vix_signal": "ELEVATED (1 point)",
+    "yield_curve_signal": "NORMAL (2 points)",
+    "gamma_zgl_signal": "SHORT Γ (1 point)",
+    "term_structure_signal": "FLAT (0.97) (1 point)",
+    "treasury_us10y": "4.313",
+    "treasury_us30y": "4.89",
+    "treasury_spread": "0.577",
+    "treasury_curve_state": "NORMAL",
+    "term_structure_ratio": "0.966",
+    "term_structure_state": "FLAT",
+    "vix_value": "23.87",
+    "vix_regime": "ELEVATED"
+  },
+
+  "mocked_api_note": "No mocked APIs - all data from live yfinance and DataBento sources"
+}

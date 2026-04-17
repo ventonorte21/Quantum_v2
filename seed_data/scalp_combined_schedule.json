@@ -1,0 +1,17 @@
+[
+  {
+    "active": true,
+    "frequency": "daily",
+    "custom_hours": 24,
+    "day_of_week": 6,
+    "hour_utc": 6,
+    "symbol": "MNQ",
+    "days_diag": 30,
+    "days_cal": 90,
+    "max_delta": 0.05,
+    "min_snapshots": 30,
+    "min_trades": 10,
+    "auto_apply": false,
+    "next_run_at": "2026-04-13 06:00:00"
+  }
+]

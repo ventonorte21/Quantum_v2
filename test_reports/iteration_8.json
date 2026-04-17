@@ -1,0 +1,77 @@
+{
+  "summary": "Completed comprehensive testing of Treasury Yields feature (US10Y/US30Y and spread). All 16 backend tests passed. All 6 frontend UI elements render correctly with proper data-testid attributes.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "✅ GET /api/treasury returns 200 status",
+    "✅ GET /api/treasury returns us10y, us30y, spread, curve_state, interpretation fields",
+    "✅ GET /api/treasury returns us10y > 0 (real data: 4.313%)",
+    "✅ GET /api/treasury returns us30y > 0 (real data: 4.890%)",
+    "✅ GET /api/treasury spread calculation correct (us30y - us10y = 0.577)",
+    "✅ GET /api/treasury curve_state is valid (NORMAL)",
+    "✅ GET /api/treasury has change tracking fields (us10y_change, us30y_change, spread_change)",
+    "✅ GET /api/treasury has monthly statistics (month_range, spread_month_mean)",
+    "✅ POST /api/analyze with symbol MNQ returns treasury object with us10y, us30y, spread, curve_state",
+    "✅ POST /api/analyze with symbol MES returns treasury with positive yields",
+    "✅ GET /api/volatility/MES includes treasury data",
+    "✅ GET /api/volatility/MNQ includes treasury data",
+    "✅ Treasury signal is valid (CONFIRM/CAUTION/NEUTRAL)",
+    "✅ Treasury score is in valid range (0-1)",
+    "✅ Treasury source is yahoo_finance",
+    "✅ Treasury has timestamp",
+    "✅ Frontend: Treasury/Yield Curve panel renders with data-testid='treasury-panel'",
+    "✅ Frontend: US10Y box renders with data-testid='treasury-us10y' showing 4.313%",
+    "✅ Frontend: US30Y box renders with data-testid='treasury-us30y' showing 4.890%",
+    "✅ Frontend: Spread box renders with data-testid='treasury-spread' showing +0.577",
+    "✅ Frontend: Curve state badge renders with data-testid='treasury-curve-state' showing NORMAL",
+    "✅ Frontend: Interpretation text renders with data-testid='treasury-interpretation'"
+  ],
+  
+  "test_report_links": [
+    "/app/backend/tests/test_treasury.py",
+    "/app/test_reports/pytest/pytest_treasury_results.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_treasury.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "100% (6/6 UI elements render correctly)"
+  },
+  
+  "test_credentials": "No auth needed - public API endpoints",
+  
+  "seed_data_creation": "None required - uses real yfinance data from ^TNX (10Y) and ^TYX (30Y)",
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": true,
+  
+  "context_for_next_testing_agent": "Treasury Yields feature fully tested. Backend fetches real data from yfinance using ^TNX (10Y) and ^TYX (30Y) tickers. Spread = US30Y - US10Y. Curve states: INVERTED (<-0.2), FLAT_INVERTED (-0.2 to 0), FLAT (0 to 0.3), NORMAL (0.3 to 0.8), STEEP (>0.8). Data cached for 5 minutes. All data-testid attributes in place for automated testing.",
+  
+  "feature_verification": {
+    "us10y_yield": "Working - fetches from ^TNX via yfinance (current: 4.313%)",
+    "us30y_yield": "Working - fetches from ^TYX via yfinance (current: 4.890%)",
+    "spread_calculation": "Working - US30Y - US10Y = 0.577",
+    "curve_state": "Working - NORMAL (spread between 0.3 and 0.8)",
+    "interpretation": "Working - Portuguese text explaining curve implications",
+    "monthly_stats": "Working - includes month range, mean, std for both yields and spread",
+    "caching": "Working - 5 minute cache via CACHE_DURATION = 300"
+  }
+}

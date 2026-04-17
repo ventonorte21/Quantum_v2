@@ -1,0 +1,81 @@
+{
+  "summary": "Replay Dashboard UI fix fully tested. All features working correctly: (1) RunHistory list remains visible after clicking a run (bug fix verified), (2) Run context banner displays with run_id, dates, sizing info, capital, (3) Trade table shows Data and Qty columns, (4) RunHistory cards show sizing mode indicator (%R or ct), (5) executeReplay changes tab to 'history' showing new run.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: GET /api/replay/runs returns list of runs with config including sizing_mode",
+    "✅ Backend: GET /api/replay/run/{run_id} returns trades with entry_time and quantity fields",
+    "✅ Backend: POST /api/replay/run creates new run and returns trades with quantity",
+    "✅ Backend: New run (e9b35fa4-36f) has sizing_mode=risk_pct in config",
+    "✅ Backend: Legacy run (ae1236e9-fcf) has sizing_mode=None (expected for old runs)",
+    "✅ Frontend: Replay Dashboard loads correctly via Auto Tune button",
+    "✅ Frontend: Runs tab (history) shows list of previous runs",
+    "✅ Frontend: RunHistory list REMAINS VISIBLE after clicking a run (BUG FIX VERIFIED)",
+    "✅ Frontend: Run context banner (data-testid='run-context-banner') appears above KPIs",
+    "✅ Frontend: Banner shows run_id, dates, sizing info (2% risco/trade), capital ($50,000)",
+    "✅ Frontend: Trade table has 'Data' column showing entry date/time",
+    "✅ Frontend: Trade table has 'Qty' column showing quantity of contracts",
+    "✅ Frontend: RunHistory cards show sizing mode indicator (2%R for risk_pct mode)",
+    "✅ Frontend: executeReplay() changes activeTab to 'history' after completion",
+    "✅ Frontend: New run appears in RunHistory list after execution",
+    "✅ Frontend: KPI grid displays all metrics correctly"
+  ],
+
+  "test_report_links": [
+    "/app/frontend/src/components/ReplayDashboard.jsx"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "loadRun() at line ~1397 correctly does NOT call setActiveTab('results') - keeps user on history tab so run list stays visible",
+    "executeReplay() at line ~1388 correctly calls setActiveTab('history') to show new run in list",
+    "Run context banner at line ~1494 displays run_id, dates, sizing_mode, capital, snapshot_count",
+    "TradeTable at line ~74 includes Data (entry_time) and Qty (quantity) columns",
+    "RunHistory at line ~571 shows sizing_mode indicator (%R for risk_pct, ct for fixed)",
+    "VirtualPosition._close() at line ~625 returns quantity and entry_time in trade result"
+  ],
+
+  "updated_files": [],
+
+  "success_rate": {
+    "backend": "100% (all API tests passed)",
+    "frontend": "100% (all Playwright tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and Playwright tests"
+  },
+
+  "seed_data_creation": "None - tests use existing replay runs",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Replay Dashboard UI fix fully tested. Key changes: (1) loadRun() no longer changes activeTab - keeps user on 'history' tab so run list stays visible. (2) executeReplay() changes to 'history' tab after completion. (3) Run context banner shows run metadata above KPIs. (4) Trade table has Data and Qty columns. (5) RunHistory cards show sizing mode indicator. Test verified by clicking run in Runs tab and confirming list remains visible while results display on right panel.",
+
+  "feature_verification": {
+    "RunHistory visible after click": "PASS - loadRun() does not change activeTab",
+    "Run context banner": "PASS - shows run_id, dates, sizing info, capital",
+    "Trade table Data column": "PASS - shows entry date/time",
+    "Trade table Qty column": "PASS - shows quantity of contracts",
+    "Sizing mode indicator": "PASS - shows %R for risk_pct, ct for fixed",
+    "executeReplay tab change": "PASS - changes to 'history' tab",
+    "Backend trades with entry_time": "PASS - VirtualPosition._close() returns entry_time",
+    "Backend trades with quantity": "PASS - VirtualPosition._close() returns quantity"
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All other endpoints use live data."
+}

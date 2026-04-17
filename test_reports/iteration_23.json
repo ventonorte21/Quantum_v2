@@ -1,0 +1,105 @@
+{
+  "summary": "Auto Position Sizing and Chart Lines testing complete. All 29 backend tests passed (100%). Frontend verified: LONG/SHORT buttons show auto qty (e.g. LONG 17x), Position Manager shows active position with quantity (BUY 17x MES), Chart displays ENTRY/SL/TP price lines when position is active, lines disappear when position is closed. Auto Trade modal has account_size and risk_per_trade_pct fields with computed $/trade and $/day labels.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ POST /api/positions/evaluate/{symbol} returns risk object with all required fields",
+    "✅ risk.max_qty_by_risk = floor(max_risk_usd / sl_risk_per_contract_usd)",
+    "✅ risk.sl_risk_per_contract_usd = sl_distance_pts * point_value",
+    "✅ MES point_value = 5.0 (correct for micro S&P)",
+    "✅ point_value matches trade_symbol (regime target), not requested symbol",
+    "✅ max_qty_by_risk >= 1 always",
+    "✅ rr_ratio = tp_distance / sl_distance",
+    "✅ Open position accepts and uses auto-calculated quantity",
+    "✅ Position quantity persists in database",
+    "✅ max_risk_usd = account_size * risk_per_trade_pct / 100",
+    "✅ Frontend LONG button shows auto qty (LONG 17x)",
+    "✅ Frontend SHORT button shows auto qty (SHORT 17x)",
+    "✅ Frontend active position card shows quantity (BUY 17x MES)",
+    "✅ Chart shows ENTRY price line (white) when position is active",
+    "✅ Chart shows SL price line (red) when position is active",
+    "✅ Chart shows TP price line (green) when position is active",
+    "✅ Chart lines disappear when position is closed",
+    "✅ Auto Trade modal has account_size input (TAMANHO DA CONTA)",
+    "✅ Auto Trade modal has risk_per_trade_pct input (RISCO POR TRADE %)",
+    "✅ Auto Trade modal shows computed $/trade label (= $500 / trade)",
+    "✅ Auto Trade modal shows computed $/day label (= $1,000 / dia)",
+    "✅ PositionPanel uses chartSymbol (regime target) for API calls"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_auto_position_sizing.py",
+    "/app/backend/tests/test_position_manager.py",
+    "/app/test_reports/pytest/pytest_auto_sizing_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_auto_position_sizing.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (29/29 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "Test positions created and cleaned up during testing",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Auto Position Sizing fully implemented and tested. Key details: 1) POST /api/positions/evaluate/{symbol} returns risk object with max_qty_by_risk, sl_risk_per_contract_usd, rr_ratio, account_size, point_value. 2) max_qty_by_risk = floor(max_risk_usd / sl_risk_per_contract_usd). 3) sl_risk_per_contract_usd = sl_distance_pts * point_value. 4) point_value uses trade_symbol (regime target): MES=5.0, MNQ=2.0. 5) Frontend buttons show auto qty (LONG 17x, SHORT 17x). 6) Chart shows ENTRY (white), SL (red), TP (green) dashed lines when position is active. 7) Lines disappear when position is closed. 8) Auto Trade modal has account_size and risk_per_trade_pct fields with computed $/trade and $/day labels. 9) PositionPanel uses chartSymbol which follows regime target. 10) Current regime is TRANSICAO which targets MES. 11) SignalStack orders are MOCKED in paper mode. 12) Market is closed (weekend) so data is simulated.",
+
+  "feature_verification": {
+    "evaluate_returns_risk_object": "Working - contains max_qty_by_risk, sl_risk_per_contract_usd, rr_ratio, account_size, point_value",
+    "max_qty_calculation": "Working - floor(max_risk_usd / sl_risk_per_contract_usd)",
+    "sl_risk_calculation": "Working - sl_distance_pts * point_value",
+    "point_value_by_symbol": "Working - MES=5.0, MNQ=2.0 (uses trade_symbol)",
+    "open_position_with_auto_qty": "Working - accepts and persists auto-calculated quantity",
+    "frontend_buttons_show_qty": "Working - LONG 17x, SHORT 17x",
+    "frontend_active_position_qty": "Working - BUY 17x MES",
+    "chart_entry_line": "Working - white dashed line at entry price",
+    "chart_sl_line": "Working - red dashed line at stop loss",
+    "chart_tp_line": "Working - green dashed line at take profit",
+    "chart_lines_disappear": "Working - lines removed when position closed",
+    "auto_trade_modal_account_size": "Working - TAMANHO DA CONTA (USD) input",
+    "auto_trade_modal_risk_pct": "Working - RISCO POR TRADE % input",
+    "auto_trade_modal_computed_labels": "Working - = $500 / trade, = $1,000 / dia",
+    "position_panel_uses_chart_symbol": "Working - uses chartSymbol (regime target)"
+  },
+
+  "observed_values": {
+    "regime": "TRANSICAO",
+    "trade_symbol": "MES",
+    "archetype": "RANGE",
+    "account_size": 50000,
+    "risk_per_trade_pct": 1.0,
+    "max_risk_usd": 500,
+    "sl_risk_per_contract_usd": 28.55,
+    "max_qty_by_risk": 17,
+    "point_value": 5.0,
+    "entry_price": 6603.75,
+    "hard_stop": 6598.04,
+    "take_profit": 6623.75,
+    "rr_ratio": 1.75,
+    "data_source": "simulated (weekend)"
+  },
+
+  "mocked_api_note": "SignalStack orders are not sent in paper mode. LiveDataService disabled. Delta Zonal uses simulation mode on weekends."
+}

@@ -1,0 +1,96 @@
+{
+  "summary": "V3 Institutional Trading Architecture Phase 2 Testing Complete - All 12 backend tests passed (100%). All frontend tests passed. V3 signal engine with 3-level architecture (Nível 1: Macro Regime Detection, Nível 2: Price Filters, Nível 3: Execution Signals) working correctly. 5 market regimes (COMPLACENCIA, BULL, TRANSICAO, BEAR, CAPITULACAO) implemented. ±3σ VWAP bands added to /api/analyze and V3 context.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ returns valid JSON with keys: v3_status, nivel_1, nivel_2, nivel_3, context, symbol, timestamp",
+    "✅ GET /api/v3/signal/MNQ → nivel_1 contains: regime (TRANSICAO), macro_score (5), max_score (13), target_symbol (MES), tactic (Range Scalping), lot_pct (50), score_breakdown",
+    "✅ GET /api/v3/signal/MNQ → nivel_2 contains: passed (true), reason (string), price_vs_vah (INSIDE_VA)",
+    "✅ GET /api/v3/signal/MNQ → nivel_3 contains: action (WAIT), ofi_fast (-0.3428), ofi_slow (0.0527), absorption_flag (false)",
+    "✅ GET /api/v3/signal/MNQ → v3_status is FILTERS_PASSED (valid: ACTIVE_SIGNAL, FILTERS_PASSED, WAITING)",
+    "✅ GET /api/v3/signal/MES returns valid data (different symbol test)",
+    "✅ GET /api/v3/regimes returns 5 regime configs with score_components",
+    "✅ GET /api/v3/signal/MNQ → context contains vwap_bands with upper_3 (24238.96) and lower_3 (24110.18)",
+    "✅ Warm cache: second call to /api/v3/signal/MNQ completes in < 0.3s (well under 2s threshold)",
+    "✅ POST /api/analyze with MNQ returns vwap.upper_3 (25467.34) and vwap.lower_3 (23155.14)",
+    "✅ GET /api/v3/signal/INVALID returns 404",
+    "✅ All 5 regimes have valid config: symbol (MNQ/MES), tactic, lot_pct, direction",
+    "✅ Frontend: V3 Institutional Signal panel visible in sidebar with data-testid='v3-signal-panel'",
+    "✅ Frontend: V3 status badge shows 'FILTROS OK' with data-testid='v3-status'",
+    "✅ Frontend: V3 regime name 'TRANSICAO' displayed with data-testid='v3-regime'",
+    "✅ Frontend: V3 action 'WAIT' displayed with data-testid='v3-action'",
+    "✅ Frontend: ±3σ VWAP values shown in VWAP detail panel (-3σ: $23,155.14, +3σ: $25,467.34)",
+    "✅ Frontend: Refresh V3 button works with data-testid='refresh-v3-btn'"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_v3_signal.py",
+    "/app/test_reports/pytest/pytest_v3_signal_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_v3_signal.py (new test file for V3 signal engine)"
+  ],
+
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None required - uses DataBento historical OHLCV data and yfinance macro data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "V3 Institutional Trading Architecture Phase 2 fully tested. Key findings: 1) /api/v3/signal/{symbol} returns 3-level signal with nivel_1 (regime detection), nivel_2 (price filters), nivel_3 (execution signals). 2) 5 regimes implemented: COMPLACENCIA, BULL, TRANSICAO, BEAR, CAPITULACAO - each with symbol (MNQ/MES), tactic, lot_pct, direction. 3) ±3σ VWAP bands added to /api/analyze and V3 context.vwap_bands. 4) Warm cache working - second call < 0.3s. 5) Frontend V3 panel shows status badge (SINAL ATIVO/FILTROS OK/AGUARDANDO), regime, action, OFI values, and refresh button. 6) Weekend handling: OFI/TICK/CVD fallback to simulated data (expected). 7) Current observed: regime=TRANSICAO (5/13), status=FILTERS_PASSED, action=WAIT.",
+
+  "feature_verification": {
+    "v3_signal_endpoint": "Working - GET /api/v3/signal/{symbol} returns all 3 levels",
+    "v3_regimes_endpoint": "Working - GET /api/v3/regimes returns 5 regime configs",
+    "nivel_1_macro_regime": "Working - Detects regime from macro score + term structure overrides",
+    "nivel_2_price_filters": "Working - Evaluates price vs VA/VWAP conditions per regime",
+    "nivel_3_execution": "Working - Generates BUY/SELL/WAIT based on OFI + Absorption",
+    "vwap_3sigma_bands": "Working - upper_3 and lower_3 in /api/analyze and V3 context",
+    "warm_cache": "Working - Second call < 0.3s (well under 2s threshold)",
+    "frontend_v3_panel": "Working - Shows status, regime, action, OFI values, refresh button"
+  },
+
+  "observed_values": {
+    "v3_status": "FILTERS_PASSED",
+    "regime": "TRANSICAO",
+    "macro_score": "5/13",
+    "target_symbol": "MES",
+    "tactic": "Range Scalping",
+    "lot_pct": "50%",
+    "nivel_2_passed": true,
+    "nivel_2_price_vs_vah": "INSIDE_VA",
+    "nivel_3_action": "WAIT",
+    "ofi_fast": -0.3428,
+    "ofi_slow": 0.0527,
+    "absorption_flag": false,
+    "vwap_upper_3": 24238.96,
+    "vwap_lower_3": 24110.18,
+    "analyze_vwap_upper_3": 25467.34,
+    "analyze_vwap_lower_3": 23155.14,
+    "warm_cache_time": "< 0.3s"
+  },
+
+  "mocked_api_note": "No APIs mocked. DataBento trades return simulated/empty on weekends (expected behavior). yfinance macro data (VIX, VXN, Gamma, Treasury, Term Structure) is real yahoo_finance source. OFI/TICK/CVD fallback to simulated data on weekends."
+}

@@ -1,0 +1,99 @@
+{
+  "summary": "Snapshot Enrichment for Replay Engine - All 9 tests passed. Verified: (1) trade_preview key in snapshot document (None for WAIT, populated for redirects), (2) atr_m5 in context return and snapshot (MES=5.925, MNQ=29.2), (3) n2_signal in n2 block with all 6 expected keys (passed, trigger_level, interaction_quality, trigger_zscore, trigger_delta_ratio, regime), (4) POST /api/snapshots/record-now returns recorded=2 without errors.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend health endpoint returns healthy",
+    "✅ GET /api/v3/signal/MES returns atr_m5 in context (value=5.925)",
+    "✅ GET /api/v3/signal/MNQ returns atr_m5 in context (value=29.2)",
+    "✅ POST /api/snapshots/record-now returns recorded=2, total_symbols=2, errors=[]",
+    "✅ Snapshot document contains 'trade_preview' key",
+    "✅ Snapshot context contains 'atr_m5' field with numeric value > 0",
+    "✅ Snapshot n2 block contains 'n2_signal' with all expected keys",
+    "✅ Both MNQ and MES snapshots have all required fields",
+    "✅ GET /api/snapshots/stats returns valid stats"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_snapshot_enrichment.py",
+    "/app/test_reports/pytest/pytest_snapshot_enrichment.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "trade_preview: Correctly returns None for WAIT signals, populated for BUY/SELL or redirect scenarios",
+    "atr_m5: Computed from 5-minute ATR using delta_zonal_service.compute_atr_from_trades() with fallback to atr/3.46",
+    "n2_signal: Contains all 6 keys (passed, trigger_level, interaction_quality, trigger_zscore, trigger_delta_ratio, regime) for Replay Engine analysis"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_snapshot_enrichment.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API endpoint tests"
+  },
+
+  "seed_data_creation": "None - tests use live snapshot recording",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Snapshot enrichment verified. Key code locations: (1) snapshot_service.py line 190 - trade_preview from v3_data, (2) snapshot_service.py line 164 - atr_m5 in context, (3) snapshot_service.py line 124 - n2_signal in n2 block, (4) server.py line 4441 - atr_m5 in evaluate() context return. MongoDB collection: v3_snapshots with 586+ documents.",
+
+  "feature_verification": {
+    "trade_preview_in_snapshot": "Working - key exists, None for WAIT, populated for redirects/actionable signals",
+    "atr_m5_in_context": "Working - MES=5.925, MNQ=29.2 (numeric > 0)",
+    "n2_signal_in_n2_block": "Working - all 6 keys present (passed, trigger_level, interaction_quality, trigger_zscore, trigger_delta_ratio, regime)",
+    "record_now_endpoint": "Working - returns recorded=2 without errors",
+    "v3_signal_endpoint": "Working - returns valid response with atr_m5 in context"
+  },
+
+  "snapshot_sample_data": {
+    "MES": {
+      "action": "WAIT",
+      "trade_preview": null,
+      "context.atr_m5": 5.925,
+      "n2.n2_signal": {
+        "passed": false,
+        "trigger_level": "vah",
+        "interaction_quality": "NO_REJECTION",
+        "trigger_zscore": 25.06,
+        "trigger_delta_ratio": 0.0534,
+        "regime": "TRANSICAO"
+      }
+    },
+    "MNQ": {
+      "action": "WAIT",
+      "trade_preview": {"redirect": true, "target_symbol": "MES"},
+      "context.atr_m5": 29.2,
+      "n2.n2_signal": {
+        "passed": false,
+        "trigger_level": "vah",
+        "interaction_quality": "NO_REJECTION",
+        "trigger_zscore": 0.36,
+        "trigger_delta_ratio": 0.0591,
+        "regime": "TRANSICAO"
+      }
+    }
+  },
+
+  "mocked_api_note": "No mocked APIs - all tests use live endpoints and MongoDB"
+}

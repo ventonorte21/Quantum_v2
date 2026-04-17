@@ -1,0 +1,71 @@
+{
+  "theme": "Dark",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "colors": {
+    "background": "#09090B",
+    "surface": "#121214",
+    "border": "#27272A",
+    "primary": "#E4E4E7",
+    "primary_foreground": "#09090B",
+    "accent_blue": "#007AFF",
+    "accent_green": "#10B981",
+    "accent_red": "#EF4444",
+    "accent_yellow": "#F59E0B",
+    "text_primary": "#FAFAFA",
+    "text_secondary": "#A1A1AA"
+  },
+  "typography": {
+    "headings": "Chivo",
+    "body": "Inter",
+    "monospace": "IBM Plex Mono",
+    "base_size": "14px",
+    "hierarchy_rules": "Tight tracking on headings (tracking-tight), uppercase + wide tracking for labels/overlines. Hierarchy gap must be respected."
+  },
+  "layout": {
+    "grid_system": "Control Room Grid",
+    "spacing_scale": "Dense spacing (gap-4, p-4) to maximize data density.",
+    "border_radius": "Rounded-sm (4px) or Sharp edges (0px) to maintain the technical, Swiss brutalist aesthetic."
+  },
+  "surfaces": {
+    "style": "Grid Borders (The Technical Look)",
+    "description": "Container layouts should use border-collapse style. Grid items should have border-r and border-b with border-border/40. No heavy dropshadows, rely on 1px borders for definition.",
+    "hover_effects": "Subtle background lightening (hover:bg-zinc-800/50)."
+  },
+  "components": {
+    "charts": "Integrate TradingView widget (e.g., via iframe or react-ts-tradingview-widgets) for the main chart. Use Shadcn charts (Recharts) for the indicator panels (Volume, GAMMA, etc).",
+    "tables": "Left-aligned text, right-aligned numbers, use monospace fonts for financial figures.",
+    "widgets": "Ranking and Confluence scores should be highly visible, using large typography and accent colors (green/red) to guide the trader's action.",
+    "buttons": "Flat design, clear focus states, use accent colors only for critical actions (Buy/Sell)."
+  },
+  "media": {
+    "images": [
+      {
+        "category": "logo",
+        "url": "https://images.unsplash.com/photo-1698209652952-6ccdcf934f13?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZWNoJTIwY29tcGFueSUyMGxvZ28lMjBtaW5pbWFsJTIwdHJhbnNwYXJlbnR8ZW58MHx8fHwxNzc1MzI3NDk0fDA&ixlib=rb-4.1.0&q=85",
+        "description": "App logo (Quantum Trading)"
+      },
+      {
+        "category": "user_profile",
+        "url": "https://images.unsplash.com/photo-1660251406411-589fa0b05604?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODh8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBwb3J0cmFpdCUyMHVzZXIlMjBwcm9maWxlJTIwcGhvdG98ZW58MHx8fHwxNzc1MzI3NDk5fDA&ixlib=rb-4.1.0&q=85",
+        "description": "User profile avatar"
+      }
+    ],
+    "icons": {
+      "library": "@phosphor-icons/react",
+      "style": "Bold or Duotone, installed via yarn add @phosphor-icons/react"
+    }
+  },
+  "interactions_and_motion": {
+    "hover": "Explicit hover states (hover:text-white hover:bg-zinc-800).",
+    "focus": "Focus rings required for all inputs/buttons.",
+    "transitions": "Fast, minimal animation. transition-colors duration-150."
+  },
+  "specific_instructions_for_agent": [
+    "Layout structure: Sidebar for assets (MNQ, MES, MYM, M2K) and timeframe selection (4H, 1H, 5M). Main area: TradingView chart widget. Right/Bottom area: Indicator panels.",
+    "The Confluence (First Filter) and Confidence (Confirmation) scores should have a dedicated prominent widget, perhaps a progress ring or bold metric.",
+    "Data table or lists for predictive (RSI, MACD) and confirmatory (Volume, GAMMA/Vix) indicators, using monospace fonts.",
+    "Include an alerts/signals section for 5M entry pullbacks.",
+    "Ensure all interactive elements have data-testid attributes (e.g., data-testid='asset-selector-mnq').",
+    "Do not use card components with soft shadows; stick to the flat, technical grid borders."
+  ]
+}

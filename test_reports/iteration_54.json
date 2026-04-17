@@ -1,0 +1,95 @@
+{
+  "summary": "D-1 DZ Zones Bug Fix & Symbol Switch Scale Bug Fix (Iteration 54) - All 11 backend tests passed. Frontend symbol switch verified working correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MES returns nivel_2.dz_d1_vah with zscore and delta_ratio fields",
+    "✅ GET /api/v3/signal/MES returns nivel_2.dz_d1_val with zscore and delta_ratio fields",
+    "✅ GET /api/v3/signal/MES returns nivel_2.dz_d1_poc with zscore and delta_ratio fields",
+    "✅ GET /api/v3/signal/MES nivel_2.transicao_border is one of VAH, VAL, VAH_D1, VAL_D1, MID (currently VAH_D1)",
+    "✅ GET /api/v3/signal/MES nivel_2.d1_levels has vah, val, poc fields",
+    "✅ GET /api/v3/signal/MNQ also returns dz_d1_vah, dz_d1_val fields in nivel_2",
+    "✅ GET /api/v3/signal/MES nivel_2.reason contains 'Borda:' indicating border detection works",
+    "✅ POST /api/analyze {symbol:MES, timeframe:1H} returns session_vps with daily_vp and rth_vp",
+    "✅ MES price validation: current_price ~6622 is in valid range (5000-8000)",
+    "✅ MNQ price validation: current_price ~24350 is in valid range (15000-30000)",
+    "✅ All DZ fields (dz_vah, dz_val, dz_vwap, dz_poc, dz_d1_vah, dz_d1_val, dz_d1_poc) have required keys: zscore, delta_ratio, volume_significant, position, signal, net_delta",
+    "✅ Frontend: Symbol switch from MNQ to MES clears stale data - chart Y-axis shows 6380-6680 (MES range), not 17000-26000 (MNQ range)",
+    "✅ Frontend: MES chart price lines (VAH D-1: 6649.09, POC D-1: 6638.56, VAL D-1: 6629.11) are all in MES range"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_d1_dz_zones_and_symbol_switch.py",
+    "/app/test_reports/pytest/pytest_d1_dz_zones_symbol_switch.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Bug 1 Fix (D-1 DZ Zones): Lines 3520-3522 in server.py extract d1_vah_dz, d1_val_dz, d1_poc_dz from dz_n2_levels. Lines 3540-3542 add dz_d1_vah, dz_d1_val, dz_d1_poc to filters with proper dz_metrics.",
+    "Bug 1 Fix (TRANSICAO borders): Lines 3637-3640 add VAH_D1 and VAL_D1 borders with their OWN DZ data (d1_vah_dz, d1_val_dz) instead of using session proxy data.",
+    "Bug 1 Fix (n2_dz_levels): Lines 4508-4513 add d1_vah, d1_val, d1_poc to n2_dz_levels so Delta Zonal Service computes zones around them.",
+    "Bug 2 Fix (Symbol Switch): Lines 348-349 in App.js: setAnalysis(null); setV3Signal(null) clears stale data before fetching new symbol data.",
+    "MES is currently in TRANSICAO regime with border VAH_D1 detected. D-1 levels: vah=6649.09, val=6629.11, poc=6638.56"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_d1_dz_zones_and_symbol_switch.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (11/11 pytest tests passed)",
+    "frontend": "100% (Symbol switch verified via Playwright)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API tests and Playwright authentication"
+  },
+
+  "seed_data_creation": "None - tests use live market data from DataBento",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "D-1 DZ Zones bug fix verified. Key implementation: (1) Each D-1 border (VAH_D1, VAL_D1, POC_D1) now has its own DZ computation with zscore and delta_ratio fields. (2) In TRANSICAO regime, borders array includes both session (VAH, VAL) and D-1 (VAH_D1, VAL_D1) borders, each using their own DZ data. (3) Frontend clears analysis+v3Signal on symbol switch to prevent stale price lines. Test file: /app/backend/tests/test_d1_dz_zones_and_symbol_switch.py with 11 tests.",
+
+  "feature_verification": {
+    "GET /api/v3/signal/MES nivel_2.dz_d1_vah": "Working - returns zscore=0.0, delta_ratio=0.0 (no volume in zone currently)",
+    "GET /api/v3/signal/MES nivel_2.dz_d1_val": "Working - returns zscore=0.0, delta_ratio=0.0",
+    "GET /api/v3/signal/MES nivel_2.dz_d1_poc": "Working - returns zscore=0.0, delta_ratio=0.0",
+    "GET /api/v3/signal/MES nivel_2.transicao_border": "Working - returns 'VAH_D1' (nearest border to current price)",
+    "GET /api/v3/signal/MES nivel_2.d1_levels": "Working - returns {vah: 6649.09, val: 6629.11, poc: 6638.56}",
+    "GET /api/v3/signal/MES nivel_2.reason": "Working - contains 'Borda: VAH_D1' indicating border detection",
+    "POST /api/analyze session_vps": "Working - returns daily_vp and rth_vp with poc, vah, val",
+    "Frontend symbol switch": "Working - MES chart Y-axis shows 6380-6680 range after switching from MNQ"
+  },
+
+  "mocked_api_note": "SignalStack webhook is MOCKED. All VWAP/VP/DZ data is REAL from DataBento live feed.",
+
+  "bug_fix_verification": {
+    "bug_1_d1_dz_zones": {
+      "description": "D-1 borders (VAH_D1, VAL_D1, POC_D1) were using session VA proxy data instead of their own zones",
+      "fix_location": "server.py lines 3520-3522, 3540-3542, 3637-3640, 4508-4513",
+      "verification": "nivel_2.dz_d1_vah, dz_d1_val, dz_d1_poc now have independent zscore and delta_ratio fields",
+      "status": "FIXED"
+    },
+    "bug_2_chart_scale": {
+      "description": "MNQ price lines were persisting on MES chart, stretching Y-axis to 26000",
+      "fix_location": "App.js lines 348-349: setAnalysis(null); setV3Signal(null)",
+      "verification": "After switching from MNQ to MES, chart Y-axis shows 6380-6680 (MES range), not 17000-26000 (MNQ range)",
+      "status": "FIXED"
+    }
+  }
+}

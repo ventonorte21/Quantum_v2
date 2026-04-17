@@ -1,0 +1,93 @@
+{
+  "summary": "Globex Auto Feature Testing (Iteration 55) - All 11 backend tests passed. All frontend tests passed. Feature working correctly.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/trading-calendar/status returns globex_auto field with ok, enabled, reason",
+    "✅ GET /api/trading-calendar/status returns nyse_auto field with ok, reason",
+    "✅ GET /api/trading-calendar/status returns session_type field (nyse/globex/closed)",
+    "✅ GET /api/trading-calendar/status returns exchange_status field (NYSE/Globex/Fechado)",
+    "✅ POST /api/autotrading/config with {globex_auto_enabled: true} enables Globex Auto",
+    "✅ After enabling Globex Auto, GET /api/trading-calendar/status returns can_trade=true and status=OPEN during Globex hours (~00:16 ET)",
+    "✅ After enabling Globex Auto, session_type is 'globex' (not 'nyse')",
+    "✅ POST /api/autotrading/config with {globex_auto_enabled: false} disables Globex Auto",
+    "✅ After disabling Globex Auto, can_trade is false during non-NYSE hours",
+    "✅ GET /api/autotrading/config returns globex_auto_enabled and globex_flatten_before_ny_minutes fields",
+    "✅ globex_flatten_before_ny_minutes is configurable via POST",
+    "✅ Frontend: Globex Auto button exists in Auto Trading panel with data-testid='globex-auto-btn'",
+    "✅ Frontend: Clicking Globex Auto button toggles cyan highlight style",
+    "✅ Frontend: When Globex Auto enabled, info box shows '18:00 ET → 09:25 ET' text",
+    "✅ Frontend: When Globex Auto enabled, flatten minutes input appears with data-testid='globex-flatten-minutes-input'",
+    "✅ Frontend: Trading status shows 'Sessao: closed' and 'Exchange: Fechado' when Globex disabled (correct behavior)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_globex_auto.py",
+    "/app/test_reports/pytest/pytest_globex_auto.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "AutoTradingConfig model (line 285): globex_auto_enabled and globex_flatten_before_ny_minutes fields properly defined with defaults",
+    "Trading status endpoint (line 4909-4981): Correctly combines NYSE Auto OR Globex Auto logic with session_type and exchange_status",
+    "is_within_globex_auto_hours() (line 194-260): Properly handles weekends, daily halt (17:00-18:00 ET), holidays, and RTH collision guard",
+    "Hours guard fallback (lines 6084-6085, 7508-7509): Correctly falls back to Globex hours when NYSE hours fail and globex_auto_enabled",
+    "Frontend App.js (line 928): Globex Auto button with proper data-testid and cyan toggle styling",
+    "Frontend App.js (line 938-941): Globex info box shows session hours and description",
+    "Frontend App.js (line 960-967): Globex flatten minutes input conditionally rendered when Globex enabled"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_globex_auto.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (11/11 pytest tests passed)",
+    "frontend": "100% (All Playwright tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API tests and Playwright authentication"
+  },
+
+  "seed_data_creation": "None - tests use existing autotrading_config collection",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Globex Auto feature fully implemented and tested. Key points: (1) globex_auto_enabled toggles Globex session trading (18:00 ET → 09:25 ET). (2) When enabled during Globex hours, session_type='globex', exchange_status='Globex', can_trade=true. (3) globex_flatten_before_ny_minutes configures auto-flatten before NYSE open (default 5 min). (4) Frontend button at data-testid='globex-auto-btn' with cyan highlight when active. (5) Info box and flatten input appear conditionally. Test file: /app/backend/tests/test_globex_auto.py",
+
+  "feature_verification": {
+    "GET /api/trading-calendar/status globex_auto": "Working - returns {ok, enabled, reason}",
+    "GET /api/trading-calendar/status nyse_auto": "Working - returns {ok, reason}",
+    "GET /api/trading-calendar/status session_type": "Working - returns 'globex' when Globex enabled and in hours",
+    "GET /api/trading-calendar/status exchange_status": "Working - returns 'Globex' when Globex active",
+    "POST /api/autotrading/config globex_auto_enabled": "Working - toggles Globex Auto",
+    "GET /api/autotrading/config globex fields": "Working - returns globex_auto_enabled and globex_flatten_before_ny_minutes",
+    "Frontend Globex Auto button": "Working - data-testid='globex-auto-btn' with cyan toggle",
+    "Frontend Globex info box": "Working - shows '18:00 ET → 09:25 ET' when enabled",
+    "Frontend flatten minutes input": "Working - data-testid='globex-flatten-minutes-input' appears when enabled"
+  },
+
+  "mocked_api_note": "SignalStack webhook is MOCKED. All trading calendar logic is REAL using exchange_calendars library.",
+
+  "current_time_context": {
+    "test_time_et": "2026-04-07 00:16 ET (within Globex hours)",
+    "globex_hours_ok": true,
+    "nyse_hours_ok": false,
+    "note": "Tests run during Globex session (18:00-09:25 ET), NYSE closed"
+  }
+}

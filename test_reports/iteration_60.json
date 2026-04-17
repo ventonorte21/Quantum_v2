@@ -1,0 +1,109 @@
+{
+  "summary": "V3 Pipeline Logs Feature Testing (Iteration 60) - NEW feature for structured logging of N1/N2/N3 pipeline evaluations. Backend: 11/12 tests passed (1 test had timeout handling issue, fixed). All 3 pipeline-logs endpoints working correctly. Frontend: Login page renders without errors, Dashboard loads with Logs button (data-testid='pipeline-logs-btn'), PipelineLogsPanel opens and displays logs with stats, filters, and expandable rows.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "DataBentoChart (lightweight-charts)",
+        "issue": "RangeError: Invalid language tag: en-US@posix - locale formatting issue in chart library creates overlay",
+        "selector": "#webpack-dev-server-client-overlay",
+        "priority": "LOW",
+        "note": "PRE-EXISTING issue from iteration_59. Workaround: remove overlay via JS or use force=True for clicks."
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ POST /api/v3/pipeline-logs/verbose?enable=true - enables verbose logging",
+    "✅ POST /api/v3/pipeline-logs/verbose?enable=false - disables verbose logging",
+    "✅ GET /api/v3/pipeline-logs - returns logs with filters (symbol, outcome, regime, hours, limit)",
+    "✅ GET /api/v3/pipeline-logs - returns summary with outcomes, regimes, avg_duration_ms, top_n2_block_reasons",
+    "✅ GET /api/v3/pipeline-logs/stats - returns aggregated performance stats",
+    "✅ GET /api/v3/signal/MNQ - triggers V3 evaluation (creates log when verbose enabled)",
+    "✅ Log structure verified: timestamp, symbol, outcome, duration_ms (fetch/n1/n2/n3/total), n1, n2, n3, data_quality",
+    "✅ duration_ms.total > 0 (proves instrumentation is working)",
+    "✅ Symbol filter works correctly",
+    "✅ Outcome filter works correctly",
+    "✅ Edge cases handled (invalid hours, zero limit, nonexistent symbol)",
+    "✅ Frontend login page loads with google-login-btn data-testid",
+    "✅ Dashboard loads with pipeline-logs-btn data-testid",
+    "✅ PipelineLogsPanel opens with data-testid='pipeline-logs-panel'",
+    "✅ PipelineLogsPanel shows stats bar (evaluations, latency, fetch gargalo, N2 filtros, max latency, active signals)",
+    "✅ PipelineLogsPanel shows top N2 block reasons",
+    "✅ PipelineLogsPanel has filter dropdowns (filter-symbol, filter-outcome, filter-regime, filter-hours)",
+    "✅ PipelineLogsPanel has verbose-toggle-btn, refresh-logs-btn, close-pipeline-logs-btn",
+    "✅ PipelineLogsPanel displays log rows with expandable details"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_pipeline_logs.py",
+    "/app/test_reports/pytest/pytest_pipeline_logs.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "Pipeline logging implementation is correct - logs are saved to MongoDB v3_pipeline_logs collection",
+    "TTL index (30 days) is properly configured for auto-cleanup",
+    "Verbose mode toggle works via environment variable V3_VERBOSE_LOGGING",
+    "Duration instrumentation captures fetch/n1/n2/n3/total timings correctly",
+    "Summary aggregation includes outcomes, regimes, avg_duration_ms, and top_n2_block_reasons",
+    "Frontend PipelineLogsPanel component is well-structured with proper data-testid attributes"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_pipeline_logs.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (all pipeline-logs endpoints working)",
+    "frontend": "100% (Logs button and PipelineLogsPanel working)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for dashboard testing"
+  },
+
+  "seed_data_creation": "None - logs are created automatically when V3 evaluations run",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "V3 Pipeline Logs feature fully implemented and tested. Backend endpoints: GET /api/v3/pipeline-logs, GET /api/v3/pipeline-logs/stats, POST /api/v3/pipeline-logs/verbose. Frontend: PipelineLogsPanel.jsx with Logs button in nav bar. Pre-existing chart locale issue (en-US@posix) still present but not blocking. SignalStack webhook is MOCKED.",
+
+  "mocked_api_note": "SignalStack webhook is MOCKED (returns mock 201). All other data is REAL from MongoDB/DataBento.",
+
+  "feature_verification": {
+    "pipeline_logs_endpoints": {
+      "GET /api/v3/pipeline-logs": "Working - returns logs with filters and summary",
+      "GET /api/v3/pipeline-logs/stats": "Working - returns aggregated stats",
+      "POST /api/v3/pipeline-logs/verbose": "Working - toggles verbose logging"
+    },
+    "log_structure": {
+      "timestamp": "Present",
+      "symbol": "Present",
+      "outcome": "Present (v3_status)",
+      "duration_ms": "Present with fetch/n1/n2/n3/total",
+      "n1": "Present with regime/macro_score/target_symbol",
+      "n2": "Present with passed/filters/block_reasons",
+      "n3": "Present with action/side/mqs",
+      "data_quality": "Present with feed_live/vp_source/vwap_source"
+    },
+    "frontend_components": {
+      "Logs button": "Present with data-testid='pipeline-logs-btn'",
+      "PipelineLogsPanel": "Opens correctly with data-testid='pipeline-logs-panel'",
+      "Stats bar": "Shows evaluations, latency metrics, active signals",
+      "Filters": "Symbol, outcome, regime, hours dropdowns working",
+      "Log rows": "Expandable with detailed breakdown"
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "summary": "Completed testing of OFI (Order Flow Imbalance) feature and 2s10s Yield Curve migration. All 17 backend tests passed (100%). All 12 frontend tests passed (100%). OFI endpoint returns ofi_fast, ofi_slow, absorption_flag, signal, source fields. Treasury endpoint returns us2y, us10y, spread_bps, spread_type=2s10s, curve_state, score (0-4), max_score=4. Market Regime now shows score out of /13 max.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/ofi/MNQ returns 200 with ofi_fast, ofi_slow, absorption_flag, signal, source",
+    "✅ GET /api/ofi/MES returns 200 with OFI data",
+    "✅ GET /api/ofi/INVALID returns 404",
+    "✅ OFI values in valid range [-1, +1]",
+    "✅ OFI has interpretation field",
+    "✅ GET /api/treasury returns 200 with us2y, us10y, spread_bps, spread_type=2s10s",
+    "✅ Treasury curve_state is valid (STEEP/NORMAL/FLAT/INVERTED/DEEP_INVERSION)",
+    "✅ Treasury score is 0-4 with max_score=4",
+    "✅ Treasury yields in reasonable range (0-10%)",
+    "✅ POST /api/analyze includes ofi field with all required fields",
+    "✅ POST /api/analyze includes treasury with 2s10s spread",
+    "✅ POST /api/analyze includes cvd and tick_index alongside ofi",
+    "✅ Analyze has all 4 regime components (VIX, Treasury, Gamma, Term Structure)",
+    "✅ Frontend: OFI panel visible with data-testid='ofi-panel'",
+    "✅ Frontend: OFI Fast element shows value (-0.246)",
+    "✅ Frontend: OFI Slow element shows value (-0.152)",
+    "✅ Frontend: OFI Absorption shows INACTIVE status",
+    "✅ Frontend: OFI Signal shows NEUTRAL",
+    "✅ Frontend: OFI Interpretation shows simulated data message",
+    "✅ Frontend: Treasury panel shows '2s10s (US2Y / US10Y)' label",
+    "✅ Frontend: Treasury shows US 2Y (3.720%)",
+    "✅ Frontend: Treasury shows US 10Y (4.313%)",
+    "✅ Frontend: Treasury shows SPREAD 2s10s (+0.593, 59 bps)",
+    "✅ Frontend: Treasury curve state shows NORMAL (3/4)",
+    "✅ Frontend: Market Regime shows score 6/13 (max 13 pts)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_ofi_treasury.py",
+    "/app/test_reports/pytest/pytest_ofi_treasury_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_ofi_treasury.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (12/12 tests passed)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None required - uses live yfinance data for Treasury, simulated DataBento data for OFI (market closed)",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "OFI feature fully tested. OFI endpoint /api/ofi/{symbol} returns ofi_fast (30s/500 trades window), ofi_slow (3min/2000 trades window), absorption_flag (|OFI_Fast| > 0.7 AND Price_Delta < 2 ticks). Treasury migrated from 10s30s to 2s10s spread (^UST2Y/^TNX) with 5 states (0-4 pts). Market Regime recalibrated to max 13 pts: VIX(0-3) + Yield(0-4) + Gamma(0-3) + TermStructure(0-3). Current observed: OFI simulated (market closed), Treasury NORMAL (3/4), Regime TRANSICAO (6/13).",
+
+  "feature_verification": {
+    "ofi_endpoint": "Working - GET /api/ofi/{symbol} returns ofi_fast, ofi_slow, absorption_flag, signal, source",
+    "ofi_invalid_symbol": "Working - Returns 404 for invalid symbols",
+    "treasury_endpoint": "Working - GET /api/treasury returns us2y, us10y, spread_bps, spread_type=2s10s, score (0-4)",
+    "analyze_ofi": "Working - POST /api/analyze includes ofi field",
+    "analyze_treasury_2s10s": "Working - POST /api/analyze includes treasury with spread_type=2s10s",
+    "ofi_panel": "Working - Shows OFI Fast, OFI Slow, Absorption, Signal, Interpretation",
+    "treasury_panel": "Working - Shows US 2Y, US 10Y, SPREAD 2s10s, curve_state with score/4",
+    "market_regime_scoring": "Working - Shows X/13 format (max 13 pts)"
+  },
+
+  "observed_values": {
+    "ofi_fast": "-0.246",
+    "ofi_slow": "-0.152",
+    "ofi_absorption_flag": false,
+    "ofi_signal": "NEUTRAL",
+    "ofi_source": "simulated",
+    "treasury_us2y": "3.720%",
+    "treasury_us10y": "4.313%",
+    "treasury_spread": "+0.593 (59 bps)",
+    "treasury_spread_type": "2s10s",
+    "treasury_curve_state": "NORMAL",
+    "treasury_score": "3/4",
+    "market_regime": "TRANSICAO",
+    "market_regime_score": "6/13"
+  },
+
+  "mocked_api_note": "OFI uses simulated data when market is closed (Saturday). Treasury uses live yfinance data."
+}

@@ -1,0 +1,102 @@
+{
+  "summary": "Trading System Review Testing (Iteration 58) - All 17 backend tests passed. Verified: (1) Replay with MES+MNQ has NO overlapping trades (max_concurrent_positions=1 enforced), (2) All trades have duration_minutes > 0 (no 0-second trades), (3) SignalStack orders returns both 'orders' (real SS) and 'v3_trades' (paper positions), (4) Fills/Journal returns positions with PnL, (5) Fills/Stats returns breakdown by regime and symbol.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ POST /api/replay/run with MES+MNQ returns trades (2 trades generated)",
+    "✅ Replay metrics returned: 2 trades, 50% win rate",
+    "✅ NO OVERLAPPING TRADES: Trade 1 (MES) exits 01:05:52, Trade 2 (MNQ) enters 02:04:02 (~1h gap)",
+    "✅ All trades have duration > 0 (146.3 min and 57.8 min)",
+    "✅ Replay config preserved: symbols=['MES', 'MNQ'], max_concurrent_positions=1",
+    "✅ GET /api/signalstack/orders returns both 'orders' (16) and 'v3_trades' (16)",
+    "✅ V3 trades have correct structure: symbol, action, quantity, status, source, regime, etc.",
+    "✅ SignalStack symbol filter works: 7 orders, 8 v3_trades for MES",
+    "✅ GET /api/fills/journal returns 16 positions",
+    "✅ Closed positions have realized_pnl field",
+    "✅ Journal filters work (symbol=MNQ, days=30)",
+    "✅ GET /api/fills/stats returns aggregated statistics",
+    "✅ Stats by_regime: {'TRANSICAO': {count: 16, pnl: 0}}",
+    "✅ Stats by_symbol: {'MNQ': {count: 8}, 'MES': {count: 8}}",
+    "✅ Stats days param works (days=7)",
+    "✅ Backend health check passed",
+    "✅ Replay defaults endpoint works (max_concurrent_positions=1)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_trading_system_review.py",
+    "/app/test_reports/pytest/pytest_trading_system_review.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "replay_engine.py (lines 926-928): max_concurrent_positions correctly enforced - new position only opened if len(active_positions) < max_concurrent",
+    "replay_engine.py (lines 914-923): Position updates only process snapshots for the SAME symbol - prevents cross-symbol interference",
+    "replay_engine.py (lines 620-624): duration_minutes correctly calculated from entry_time and exit_time",
+    "server.py (lines 7998-8043): GET /signalstack/orders correctly merges SS orders with V3 paper trades from positions collection",
+    "fills.py (lines 43-100): GET /fills/journal correctly enriches positions with orders and calculates realized_pnl",
+    "fills.py (lines 191-278): GET /fills/stats correctly aggregates by regime and symbol"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_trading_system_review.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 pytest tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Not required for tested endpoints (no auth needed)"
+  },
+
+  "seed_data_creation": "None - tests use existing v3_snapshots collection (~2900 docs)",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Trading system review complete. Key findings: (1) Replay engine correctly enforces max_concurrent_positions=1 - no overlapping trades across MES/MNQ. (2) Duration bug fixed - all trades have duration > 0. (3) SignalStack unified view working - returns both real SS orders and V3 paper trades. (4) Journal and Stats endpoints working with correct PnL calculation and regime/symbol breakdown. Test file: /app/backend/tests/test_trading_system_review.py",
+
+  "feature_verification": {
+    "POST /api/replay/run no overlap": "VERIFIED - Trade 1 exits before Trade 2 enters (1h gap)",
+    "POST /api/replay/run duration > 0": "VERIFIED - 146.3 min and 57.8 min",
+    "GET /api/signalstack/orders unified view": "VERIFIED - returns orders (16) + v3_trades (16)",
+    "GET /api/fills/journal positions": "VERIFIED - returns 16 positions with realized_pnl",
+    "GET /api/fills/stats breakdown": "VERIFIED - by_regime (TRANSICAO) and by_symbol (MNQ, MES)"
+  },
+
+  "mocked_api_note": "SignalStack webhook is MOCKED (returns mock 201). All other data is REAL from MongoDB.",
+
+  "replay_trade_details": {
+    "trade_1": {
+      "id": "4eaaa00f",
+      "symbol": "MES",
+      "entry_time": "2026-04-05T22:39:33",
+      "exit_time": "2026-04-06T01:05:52",
+      "duration_minutes": 146.3,
+      "exit_reason": "STOP_LOSS"
+    },
+    "trade_2": {
+      "id": "2b4816e8",
+      "symbol": "MNQ",
+      "entry_time": "2026-04-06T02:04:02",
+      "exit_time": "2026-04-06T03:01:50",
+      "duration_minutes": 57.8,
+      "exit_reason": "TAKE_PROFIT"
+    },
+    "overlap_check": "NO OVERLAP - Trade 2 entry (02:04:02) is after Trade 1 exit (01:05:52)"
+  }
+}

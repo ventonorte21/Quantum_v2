@@ -1,0 +1,138 @@
+{
+  "summary": "Data Quality Layer P2 fully tested. All 32 backend tests passed. New features: DEAD TTL (4 confidence levels), MQS binary fuse for N2/N3, Exponential Backoff in Circuit Breaker. All P0+P1 regression tests passed.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "economic_calendar",
+        "issue": "Circuit breaker OPEN (jblanked.com API returning 401 Unauthorized). Using static fallback correctly.",
+        "priority": "LOW"
+      },
+      {
+        "endpoint": "rvx",
+        "issue": "RVX using FALLBACK (Yahoo Finance ^RVX delisted). Static fallback value 24.0 used correctly.",
+        "priority": "LOW"
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ LKG DEAD TTL: VIX at age=6000s returns confidence=DEAD (dead_ttl=5400s)",
+    "✅ LKG DEAD TTL: Treasury at age=8000s returns confidence=DEAD (dead_ttl=7200s)",
+    "✅ LKG DEAD TTL: Gamma at age=101000s returns confidence=DEAD (dead_ttl=100800s)",
+    "✅ LKG 4 confidence levels: LIVE (within stale_ttl), STALE (between stale and dead), DEAD (past dead_ttl), FALLBACK (never had data)",
+    "✅ DEAD multiplier is 0.0 (not 0.3 like FALLBACK or 0.7 like STALE)",
+    "✅ DQS collapses when N1 source goes DEAD: VIX DEAD alone → DQS ~0.769 → DEFENSIVE",
+    "✅ DQS collapses when 2 N1 sources go DEAD: VIX+TS DEAD → DQS ~0.538 → HARD_STOP",
+    "✅ LKG_TTL_CONFIG values correct: VIX(90min), Treasury(120min), Gamma(28h)",
+    "✅ Circuit Breaker Backoff constants: base=120s, multiplier=2.0, max=900s",
+    "✅ Circuit Breaker Exponential Backoff: HALF_OPEN fail → OPEN with doubled recovery_timeout",
+    "✅ Circuit Breaker Backoff: consecutive cycles double the timeout (240→480→900 max)",
+    "✅ Circuit Breaker Backoff: success resets everything (timeout to base, cycles to 0)",
+    "✅ Circuit Breaker status shows consecutive_open_cycles and recovery_timeout_s in API",
+    "✅ MQS thresholds: max_trade_age=30s, min_buffer_size=10",
+    "✅ MQS evaluate: ws_connected=True, buffer>=10 trades, last_trade<=30s → ok=True, score=1.0",
+    "✅ MQS evaluate: ws_connected=False → ok=False with reason containing 'WebSocket desconectado'",
+    "✅ MQS evaluate: buffer<10 trades → ok=False with reason containing 'Buffer insuficiente'",
+    "✅ MQS evaluate: last_trade>30s → ok=False with reason containing 'Ultimo trade stale'",
+    "✅ MQS evaluate: multiple failures combine in reason with score=0.0",
+    "✅ MQS evaluate: partial pass gives score 0.67 (2/3 components)",
+    "✅ MQS is_ok() quick check method works correctly",
+    "✅ MQS get_status() returns evaluation results",
+    "✅ GET /api/v3/data-quality shows lkg_keys with stale_ttl and dead_ttl per source",
+    "✅ GET /api/v3/data-quality shows mqs status per symbol (MNQ, MES)",
+    "✅ Circuit breaker status in API shows consecutive_open_cycles and recovery_timeout_s",
+    "✅ V3 signal includes mqs in data_quality object",
+    "✅ V3 status = MQS_FREEZE when MQS fails (N3 frozen, DQS/N1 intact) - logic verified",
+    "✅ P0+P1 regression: LKG LIVE/STALE/FALLBACK still work",
+    "✅ P0+P1 regression: CircuitBreaker CLOSED/OPEN/HALF_OPEN still work",
+    "✅ P0+P1 regression: DataEpoch seal_epoch() still works",
+    "✅ P0+P1 regression: DQS step function still works",
+    "✅ P0+P1 regression: Pre-warm and staggered refresh still work"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_data_quality_p2.py",
+    "/app/test_reports/pytest/pytest_data_quality_p2.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "DEAD TTL correctly implemented: LKG_TTL_CONFIG has per-source stale_ttl and dead_ttl values",
+    "DEAD confidence level correctly returns multiplier 0.0 (forces DQS collapse)",
+    "Exponential backoff correctly doubles recovery_timeout on each HALF_OPEN failure (120→240→480→900 max)",
+    "Success in HALF_OPEN correctly resets: recovery_timeout→base, consecutive_open_cycles→0",
+    "MQS binary fuse correctly evaluates 3 components: ws_connected, buffer_has_trades, last_trade_fresh",
+    "MQS failure correctly freezes N3 execution while preserving DQS/N1 intact",
+    "V3 signal correctly includes mqs in data_quality object",
+    "GET /api/v3/data-quality correctly shows stale_ttl/dead_ttl per source and mqs status per symbol",
+    "All P0 (LKG, CircuitBreaker, DataEpoch, DQS) and P1 (Pre-Warm, Staggered) features still functional"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_data_quality_p2.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (32/32 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API tests"
+  },
+
+  "seed_data_creation": "None - tests use live data and synthetic unit test data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Data Quality Layer P2 fully tested. Key new features: (1) DEAD TTL in LKG - 4 confidence levels (LIVE→STALE→DEAD→FALLBACK), DEAD multiplier=0.0 forces DQS collapse. (2) MQS binary fuse - 3 components (ws_connected, buffer>=10, last_trade<=30s), MQS fail → v3_status=MQS_FREEZE. (3) Exponential Backoff - 120→240→480→900 max, success resets everything. Test file: /app/backend/tests/test_data_quality_p2.py. P0 tests: test_data_quality.py (39/39). P1 tests: test_p1_optimizations.py (22/22). Current live status: VIX/VXN/term_structure/treasury/gamma are LIVE, RVX and economic_calendar are FALLBACK. MQS: MNQ and MES both ok=True, score=1.0.",
+
+  "feature_verification": {
+    "DEAD TTL VIX (5400s)": "Working - age>5400s returns DEAD confidence",
+    "DEAD TTL Treasury (7200s)": "Working - age>7200s returns DEAD confidence",
+    "DEAD TTL Gamma (100800s)": "Working - age>100800s returns DEAD confidence",
+    "4 Confidence Levels": "Working - LIVE, STALE, DEAD, FALLBACK all functional",
+    "DEAD Multiplier 0.0": "Working - forces DQS collapse to DEFENSIVE/HARD_STOP",
+    "DQS Collapse VIX DEAD": "Working - VIX DEAD alone → DQS ~0.769 → DEFENSIVE",
+    "DQS Collapse 2 DEAD": "Working - VIX+TS DEAD → DQS ~0.538 → HARD_STOP",
+    "Exponential Backoff Base": "Working - BACKOFF_BASE=120s",
+    "Exponential Backoff Doubling": "Working - 120→240→480→900 max",
+    "Exponential Backoff Reset": "Working - success resets timeout and cycles",
+    "Backoff Status in API": "Working - consecutive_open_cycles, recovery_timeout_s visible",
+    "MQS Thresholds": "Working - max_trade_age=30s, min_buffer_size=10",
+    "MQS All Pass": "Working - ok=True, score=1.0 when all 3 components pass",
+    "MQS WS Disconnected": "Working - ok=False with 'WebSocket desconectado'",
+    "MQS Buffer Insufficient": "Working - ok=False with 'Buffer insuficiente'",
+    "MQS Trade Stale": "Working - ok=False with 'Ultimo trade stale'",
+    "MQS in V3 Signal": "Working - data_quality.mqs object present",
+    "MQS_FREEZE Status": "Working - v3_status=MQS_FREEZE when MQS fails",
+    "API TTL Config": "Working - /api/v3/data-quality shows stale_ttl/dead_ttl per source",
+    "API MQS Status": "Working - /api/v3/data-quality shows mqs per symbol"
+  },
+
+  "live_data_status": {
+    "vix": "LIVE (Yahoo Finance)",
+    "vxn": "LIVE (Yahoo Finance)",
+    "rvx": "FALLBACK (static 24.0 - Yahoo ^RVX delisted)",
+    "term_structure": "LIVE (Yahoo Finance)",
+    "treasury": "LIVE (Yahoo Finance)",
+    "gamma": "LIVE (Yahoo Finance options chain)",
+    "economic_calendar": "FALLBACK (jblanked.com API returning 401, circuit breaker OPEN)",
+    "mqs_mnq": "ok=True, score=1.0 (DataBento Live connected)",
+    "mqs_mes": "ok=True, score=1.0 (DataBento Live connected)"
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All P2 tests use live endpoints."
+}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="12" time="213.638" timestamp="2026-04-08T01:17:30.283764+00:00" hostname="agent-env-7f5bb1fd-f9b8-40a1-a785-81245f2dfa8f"><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_01_enable_verbose_mode" time="60.168"><failure message="AssertionError: Expected 200, got 502: The preview environment is not responding. It may be starting up.&#10;  &#10;assert 502 == 200&#10; +  where 502 = &lt;Response [502]&gt;.status_code">backend/tests/test_pipeline_logs.py:37: in test_01_enable_verbose_mode
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 502: The preview environment is not responding. It may be starting up.
+E     
+E   assert 502 == 200
+E    +  where 502 = &lt;Response [502]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_02_trigger_v3_evaluation" time="61.190"><failure message="requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='gamma-vix-predictor.preview.emergentagent.com', port=443): Read timed out. (read timeout=60)">/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:534: in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/connection.py:571: in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:1415: in getresponse
+    response.begin()
+/usr/local/lib/python3.11/http/client.py:330: in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/http/client.py:291: in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/socket.py:718: in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/ssl.py:1314: in recv_into
+    return self.read(nbytes, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/ssl.py:1166: in read
+    return self._sslobj.read(len, buffer)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TimeoutError: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:644: in send
+    resp = conn.urlopen(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:841: in urlopen
+    retries = retries.increment(
+/root/.venv/lib/python3.11/site-packages/urllib3/util/retry.py:490: in increment
+    raise reraise(type(error), error, _stacktrace)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/urllib3/util/util.py:39: in reraise
+    raise value
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:787: in urlopen
+    response = self._make_request(
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:536: in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+/root/.venv/lib/python3.11/site-packages/urllib3/connectionpool.py:367: in _raise_timeout
+    raise ReadTimeoutError(
+E   urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='gamma-vix-predictor.preview.emergentagent.com', port=443): Read timed out. (read timeout=60)
+
+During handling of the above exception, another exception occurred:
+backend/tests/test_pipeline_logs.py:49: in test_02_trigger_v3_evaluation
+    response = self.session.get(f"{BASE_URL}/api/v3/signal/MNQ", timeout=60)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:589: in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:703: in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/adapters.py:690: in send
+    raise ReadTimeout(e, request=request)
+E   requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='gamma-vix-predictor.preview.emergentagent.com', port=443): Read timed out. (read timeout=60)</failure></testcase><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_03_query_pipeline_logs" time="61.543" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_04_query_logs_with_symbol_filter" time="0.196" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_05_query_logs_with_outcome_filter" time="0.118" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_06_get_pipeline_stats" time="0.112" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_07_disable_verbose_mode" time="0.108" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsAPI" name="test_08_full_flow_verbose_signal_logs" time="29.413" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsEdgeCases" name="test_logs_with_invalid_hours" time="0.133" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsEdgeCases" name="test_logs_with_zero_limit" time="0.166" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsEdgeCases" name="test_logs_with_nonexistent_symbol" time="0.141" /><testcase classname="backend.tests.test_pipeline_logs.TestPipelineLogsEdgeCases" name="test_stats_with_small_hours" time="0.151" /></testsuite></testsuites>

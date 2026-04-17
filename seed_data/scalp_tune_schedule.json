@@ -1,0 +1,22 @@
+[
+  {
+    "active": true,
+    "frequency": "weekly",
+    "custom_hours": 24,
+    "day_of_week": 6,
+    "hour_utc": 6,
+    "mode": "FLOW",
+    "method": "BAYESIAN",
+    "objective": "sharpe",
+    "symbol": "MNQ",
+    "train_days": 10,
+    "test_days": 3,
+    "n_folds": 4,
+    "n_random": 5,
+    "n_iter": 15,
+    "min_snapshots": 50,
+    "auto_apply": false,
+    "improvement_threshold_pct": 5.0,
+    "next_run_at": "2026-04-19 06:00:00"
+  }
+]

@@ -1,0 +1,90 @@
+{
+  "summary": "V3 Engine 4 Improvements testing complete. 14/14 tests passed. All features verified: (1) n2_signal enriched context object with passed/trigger_level/interaction_quality/trigger_zscore/trigger_delta_ratio fields, (2) OFI EMA 20s in context.ofi_fast (smoothed float), (3) Welford Global Seed working (10/11 accumulators have n>3), (4) TRANSICAO R:R filter showing in reason string with distance vs threshold.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ nivel_2 contains n2_signal object with all required fields",
+    "✅ GET /api/v3/signal/MES nivel_2 contains same n2_signal structure",
+    "✅ n2_signal.passed is boolean, trigger_level is string, interaction_quality is string",
+    "✅ n2_signal.trigger_zscore and trigger_delta_ratio are numeric",
+    "✅ N3 reason references N2 context (e.g., 'N2: NO_REJECTION at vah')",
+    "✅ context.ofi_fast is EMA 20s (smoothed float in range [-1, 1])",
+    "✅ OFI Fast is smoothed (float type, not raw integer)",
+    "✅ Welford stats collection has 11 accumulators, 10 with n > 3 (warm)",
+    "✅ POST /api/snapshots/record-now successfully records snapshots",
+    "✅ TRANSICAO R:R filter fields present in nivel_2 (passed, interaction_quality, reason)",
+    "✅ R:R filter mentioned in reason string: 'R:R: 56.83 vs min 28.42 (OK)'",
+    "✅ interaction_quality valid values per regime (NO_REJECTION, BULLISH_ACCEPTANCE, etc.)",
+    "✅ Backend health check passed",
+    "✅ GET /api/v3/signal/MNQ and /api/v3/signal/MES both return 200"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_v3_improvements.py",
+    "/app/test_reports/pytest/pytest_v3_improvements.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "n2_signal object correctly passes enriched context from N2 to N3 - N3 no longer re-analyzes DZ levels",
+    "OFI EMA 20s computed via _compute_ofi_ema_20s() using time-windowed approach (last 20 seconds)",
+    "Welford Global Seed working: 10/11 accumulators have n>3 from historical snapshots",
+    "TRANSICAO R:R filter correctly blocks when |price-POC| < 1.5×ATR_M5 with RR_UNVIABLE quality",
+    "N3 reason string correctly references N2 context (trigger_level, Z-score, interaction_quality)"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_v3_improvements.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Auth not required for V3 signal endpoints (public API)"
+  },
+
+  "seed_data_creation": "None - tests use live API data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "V3 Engine 4 improvements fully tested. Key features: (1) n2_signal object in nivel_2 with passed/trigger_level/interaction_quality/trigger_zscore/trigger_delta_ratio - N3 uses this instead of re-analyzing DZ. (2) context.ofi_fast is EMA 20s (time-windowed, not count-based). (3) Welford Global Seed from snapshots working (10/11 accumulators warm with n>3). (4) TRANSICAO R:R filter: if |price-POC| < 1.5×ATR_M5, interaction_quality=RR_UNVIABLE and passed=False. MongoDB welford_stats has 11 accumulators. Snapshots store dz_n2/dz_n3 data.",
+
+  "feature_verification": {
+    "n2_signal_enriched_context": "Working - all 5 fields present (passed, trigger_level, interaction_quality, trigger_zscore, trigger_delta_ratio)",
+    "ofi_ema_20s": "Working - context.ofi_fast is smoothed float (e.g., -0.3176, 0.4167)",
+    "welford_global_seed": "Working - 10/11 accumulators have n>3 from historical snapshots",
+    "transicao_rr_filter": "Working - R:R distance vs threshold shown in reason string",
+    "n3_uses_n2_signal": "Working - N3 reason references N2 context (e.g., 'N2: NO_REJECTION at vah')",
+    "cross_symbol_validation": "Working - MES has same n2_signal structure as MNQ"
+  },
+
+  "welford_stats_summary": {
+    "total_accumulators": 11,
+    "warm_accumulators_n_gt_3": 10,
+    "sample_stats": [
+      "MNQ_n2_vah: n=40, mean=27758.75",
+      "MNQ_n2_vwap: n=39, mean=14299.03",
+      "MNQ_n2_poc: n=21, mean=14198.67",
+      "MES_n2_val: n=11, mean=8974.45",
+      "MNQ_n3_vwap_pos3s: n=150, mean=37.22"
+    ]
+  },
+
+  "mocked_api_note": "No mocked APIs. All endpoints use real DataBento data and MongoDB."
+}

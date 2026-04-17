@@ -1,0 +1,107 @@
+{
+  "summary": "V3 Dashboard Correction Testing Complete - All 19 tests passed (100%). Fixed missing analysis prop in N3Execution component. All indicator placements now correct: N2 has VWAP+VP, N3 has OFI+TICK, Technical excludes VIX/Gamma/VP/VWAP with no Predictive/Confirmatory division. V3 Hero shows N2+N3 side by side. Target asset prominently displayed. Chart follows regime target by default.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ V3 Hero shows N2 Filtro AND N3 Execution side by side (grid-cols-2)",
+    "✅ Target asset (MES) prominently displayed in dedicated box",
+    "✅ Chart defaults to regime target asset (MES)",
+    "✅ REGIME badge shown in left sidebar next to target asset",
+    "✅ Clicking asset overrides chart (reset button appears)",
+    "✅ N1 summary shows VIX, GEX, TS, YC values in compact row",
+    "✅ N2 contains VWAP + Volume Profile (NOT TICK/CVD/OFI)",
+    "✅ N2 summary shows VWAP distance and VP Daily position",
+    "✅ N3 contains OFI and TICK Index (NOT Entry/SL/TP)",
+    "✅ N3 summary shows OFI signal and TICK value",
+    "✅ Technical contains CVD",
+    "✅ Technical excludes VIX, GAMMA_EXPOSURE, VOLUME_PROFILE, VWAP",
+    "✅ Technical has NO Predictive/Confirmatory division",
+    "✅ Technical summary shows Long/Short/Neutral counts",
+    "✅ All 4 sidebar sections have uniform layout (bg-zinc-900/30)",
+    "✅ N1 expands to show VIX, VXN, Gamma, Term Structure, Treasury panels",
+    "✅ N2 expands to show VWAP multi-session and Volume Profile panels",
+    "✅ N3 expands to show OFI and TICK Index panels",
+    "✅ Technical expands to show CVD and indicator cards"
+  ],
+
+  "test_report_links": [
+    "/app/test_reports/iteration_20.json"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/frontend/src/App.js"
+  ],
+
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100% (19/19 tests passed)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "V3 Dashboard corrections verified. Key changes from iteration 19: 1) N2 now correctly contains VWAP + Volume Profile (was TICK/CVD/OFI). 2) N3 now correctly contains OFI + TICK (was Entry/SL/TP). 3) Technical now excludes VIX/Gamma/VP/VWAP and has no Predictive/Confirmatory division. 4) V3 Hero shows N2 Filter + N3 Execution side by side in grid-cols-2 layout. 5) Target asset (MES) prominently displayed in dedicated box. 6) Chart follows regime target by default, manual click overrides. 7) All 4 sidebar sections use uniform bg-zinc-900/30 (no colored backgrounds). 8) Fixed missing analysis prop in N3Execution component to enable OFI/TICK panels.",
+
+  "feature_verification": {
+    "v3_hero_n2_n3_layout": "Working - N2 Filtro and N3 Execution side by side in grid-cols-2",
+    "target_asset_prominence": "Working - MES displayed in dedicated box with large font",
+    "chart_default_regime_target": "Working - Chart defaults to MES (regime target)",
+    "regime_badge_sidebar": "Working - REGIME badge shown next to MES in left sidebar",
+    "asset_click_override": "Working - Clicking asset overrides chart, reset button appears",
+    "n1_summary_indicators": "Working - VIX, GEX, TS, YC shown in compact row",
+    "n2_vwap_vp_content": "Working - Contains VWAP + Volume Profile, NOT TICK/CVD/OFI",
+    "n2_summary_content": "Working - Shows VWAP distance and VP position",
+    "n3_ofi_tick_content": "Working - Contains OFI + TICK, NOT Entry/SL/TP",
+    "n3_summary_content": "Working - Shows OFI signal and TICK value",
+    "technical_cvd": "Working - CVD panel present",
+    "technical_exclusions": "Working - VIX, GAMMA, VP, VWAP excluded",
+    "technical_no_division": "Working - No Predictive/Confirmatory sections",
+    "technical_summary": "Working - Long/Short/Neutral counts shown",
+    "uniform_layout": "Working - All 4 sections use bg-zinc-900/30",
+    "n1_expand_panels": "Working - VIX, VXN, Gamma, Term Structure, Treasury",
+    "n2_expand_panels": "Working - VWAP multi-session, Volume Profile",
+    "n3_expand_panels": "Working - OFI, TICK Index",
+    "technical_expand_panels": "Working - CVD, indicator cards"
+  },
+
+  "observed_values": {
+    "v3_regime": "TRANSICAO",
+    "v3_status": "FILTROS OK",
+    "v3_action": "WAIT",
+    "v3_score": "5/13",
+    "target_asset": "MES",
+    "n2_status": "PASSED",
+    "n3_ofi_signal": "NEUTRAL",
+    "n3_tick_value": "+107",
+    "n3_tick_sentiment": "BULLISH",
+    "technical_indicators": "RSI, MACD, EMA_CROSS, BOLLINGER, STOCHASTIC, ADX, ATR, OBV, CVD"
+  },
+
+  "fix_applied": {
+    "file": "/app/frontend/src/App.js",
+    "issue": "N3Execution component was missing analysis prop",
+    "fix": "Added analysis={analysis} prop to N3Execution component",
+    "line": 524
+  },
+
+  "mocked_api_note": "DataBento returns simulated/empty trades on weekends (expected behavior). OFI/TICK/CVD show 'simulated' source indicator."
+}

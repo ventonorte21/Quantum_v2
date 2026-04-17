@@ -1,0 +1,89 @@
+{
+  "summary": "Context-Aware Chart Levels (HUD) feature fully tested. All 11 backend tests passed. Frontend Playwright tests verified HUD badges, level family buttons, and manual override functionality. Backend N3 overnight fix verified: CAPITULACAO removed from overnight fading block.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: /api/v3/signal/MNQ returns nivel_1.regime (BULL)",
+    "✅ Backend: /api/v3/signal/MNQ returns nivel_2.passed (boolean)",
+    "✅ Backend: /api/v3/signal/MNQ returns nivel_3.action (WAIT/BUY/SELL)",
+    "✅ Backend: /api/v3/signal/MNQ returns context.overnight_inventory",
+    "✅ REGIME_MATRIX: BULL - vwap_shock=null (hidden), overnight=core (visible)",
+    "✅ REGIME_MATRIX: CAPITULACAO - overnight=null (hidden), vwap_shock=core (visible)",
+    "✅ REGIME_MATRIX: TRANSICAO - vwap_trend=null, vwap_shock=null, overnight=core",
+    "✅ N3 Overnight Fix: Line 3996 is 'if regime == TRANSICAO:' (CAPITULACAO removed)",
+    "✅ N3 Overnight Fix: Line 3997 confirms Fading comment",
+    "✅ Removed Features: VP Multi-day not in DataBentoChart.jsx",
+    "✅ Removed Features: VWAP Multi-day not in DataBentoChart.jsx",
+    "✅ Frontend: HUD Regime Badge shows 'BULL' correctly",
+    "✅ Frontend: HUD Phase Badge shows 'RECON' correctly",
+    "✅ Frontend: Level family buttons visible for BULL: vp_session, vp_d1, vwap_session, vwap_trend, gamma, overnight",
+    "✅ Frontend: vwap_shock (Bands ±3σ) correctly HIDDEN for BULL regime",
+    "✅ Frontend: VP Multi-day toggle does NOT exist (correctly removed)",
+    "✅ Frontend: VWAP Multi-day toggle does NOT exist (correctly removed)",
+    "✅ Frontend: Manual override toggle works (click shows override state)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_context_aware_chart_levels.py",
+    "/app/test_reports/pytest/pytest_context_aware_chart.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "REGIME_MATRIX in DataBentoChart.jsx correctly defines level visibility per regime",
+    "detectPhase() correctly returns RECON/TARGET_LOCK/IN_TRADE based on v3Signal and activePosition",
+    "getLineConfig() correctly applies phase-aware styling (opacity, lineWidth, lineStyle)",
+    "applyOpacity() correctly converts hex color + opacity to RGBA",
+    "N3 overnight fading fix at line 3996: 'if regime == TRANSICAO:' (CAPITULACAO removed)",
+    "VP Multi-day and VWAP Multi-day correctly removed from LEVEL_FAMILIES array",
+    "Manual override state correctly managed with manualOverrides useState",
+    "Regime change correctly resets overrides via useEffect"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_context_aware_chart_levels.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (8/8 Playwright checks passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and Playwright tests"
+  },
+
+  "seed_data_creation": "None - tests use live data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Context-Aware Chart Levels (HUD) feature fully tested. Key components: (1) REGIME_MATRIX defines level visibility per regime (core/ref/null). (2) detectPhase() returns RECON/TARGET_LOCK/IN_TRADE. (3) getLineConfig() applies phase-aware styling. (4) N3 overnight fix: CAPITULACAO removed from overnight fading block (line 3996). (5) VP Multi-day and VWAP Multi-day removed. Test file: /app/backend/tests/test_context_aware_chart_levels.py. Current regime: BULL. Phase: RECON.",
+
+  "feature_verification": {
+    "HUD Regime Badge": "Working - shows current regime from v3Signal.nivel_1.regime",
+    "HUD Phase Badge": "Working - shows RECON/TARGET/IN TRADE based on detectPhase()",
+    "Level Family Buttons": "Working - only regime-relevant buttons appear per REGIME_MATRIX",
+    "BULL Regime Visibility": "Working - vp_session(core), vp_d1(core), vwap_session(core), vwap_trend(core), gamma(ref), overnight(core), vwap_shock(hidden)",
+    "Manual Override": "Working - clicking button toggles override state with visual feedback",
+    "VP Multi-day Removed": "Working - not in LEVEL_FAMILIES array",
+    "VWAP Multi-day Removed": "Working - not in LEVEL_FAMILIES array",
+    "N3 Overnight Fix": "Working - CAPITULACAO not in overnight fading block (line 3996)",
+    "Chart Price Lines": "Working - POC, VAH, VAL, VWAP, bands visible per regime"
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All other endpoints use live data."
+}

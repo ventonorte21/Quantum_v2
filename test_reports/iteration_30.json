@@ -1,0 +1,93 @@
+{
+  "summary": "SignalStack Payload Builder & Endpoints - 100% dos testes passaram (18/18). Todos os payloads JSON estão corretos conforme spec oficial SignalStack/Tradovate. Símbolos com 1 dígito de ano (MNQM6). Trailing stop (trail_trigger/trail_stop/trail_freq), breakeven, cancel e close implementados corretamente. Código morto evaluate_position_update removido do position_manager.py.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/signalstack/symbols — retorna símbolos com 1 dígito de ano (MNQM6, MESM6, MYMM6, M2KM6)",
+    "✅ MNQ symbol format — MNQM6 (M=junho, 6=2026)",
+    "✅ Market order payload — symbol, action, quantity, class='future'",
+    "✅ Limit order payload — + limit_price",
+    "✅ Stop order payload — + stop_price",
+    "✅ Stop-Limit order payload — + limit_price + stop_price",
+    "✅ Trailing stop payload — + trail_trigger=15.0, trail_stop=8.0, trail_freq=4.0",
+    "✅ Breakeven payload — + breakeven=20.0",
+    "✅ Cancel payload — action='cancel', class='future'",
+    "✅ POST /api/signalstack/test-payloads — retorna 7 resultados",
+    "✅ test-payloads summary — '1/7 aceitos, 6 rejeitados' (SessionClosed no fim de semana)",
+    "✅ Cancel retorna 201 — mesmo no fim de semana",
+    "✅ POST /api/autotrading/flatten-all — retorna status='flattened', positions_closed",
+    "✅ PUT /api/positions/{id}/update-stop — retorna 404 para posição inexistente",
+    "✅ POST /api/positions/{id}/close — retorna 404 para posição inexistente",
+    "✅ position_manager.py — evaluate_position_update foi removida (código morto limpo)",
+    "✅ SignalStackOrder model — tem trail_trigger, trail_stop, trail_freq",
+    "✅ SignalStackOrder model — tem campo breakeven"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_signalstack_payloads.py",
+    "/app/test_reports/pytest/pytest_signalstack_payloads.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_signalstack_payloads.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (18/18 tests passed)",
+    "frontend": "N/A (backend only testing)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints. SignalStack webhook: https://app.signalstack.com/hook/a65Cvk39pE3HdZiutAi9rP",
+
+  "seed_data_creation": "None",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "SignalStack payloads testados no fim de semana (sábado). Buy/sell retornam SessionClosed (400) mas Cancel retorna 201 - comportamento esperado. Todos os 7 tipos de payload estão corretos: market, limit, stop, stop_limit, trailing (trail_trigger/trail_stop/trail_freq), breakeven, cancel. Símbolos usam 1 dígito de ano (MNQM6 para MNQ junho 2026). O endpoint update-stop envia update_sl=true no payload. O endpoint close envia close market + cancel. O flatten-all envia close + cancel para cada posição. O código morto evaluate_position_update foi removido do position_manager.py.",
+
+  "feature_verification": {
+    "get_tradovate_symbol": "Working - retorna 1 dígito de ano (MNQM6)",
+    "build_signalstack_payload_market": "Working - symbol, action, quantity, class",
+    "build_signalstack_payload_limit": "Working - + limit_price",
+    "build_signalstack_payload_stop": "Working - + stop_price",
+    "build_signalstack_payload_stop_limit": "Working - + limit_price + stop_price",
+    "build_signalstack_payload_trailing": "Working - + trail_trigger, trail_stop, trail_freq",
+    "build_signalstack_payload_breakeven": "Working - + breakeven",
+    "build_signalstack_payload_cancel": "Working - action='cancel'",
+    "test_payloads_endpoint": "Working - 7 resultados, summary",
+    "flatten_all_endpoint": "Working - close + cancel per symbol",
+    "update_stop_endpoint": "Working - update_sl=true no payload",
+    "close_position_endpoint": "Working - close market + cancel",
+    "position_manager_cleanup": "Working - evaluate_position_update removida"
+  },
+
+  "observed_values": {
+    "symbols": {
+      "MNQ": "MNQM6",
+      "MES": "MESM6",
+      "MYM": "MYMM6",
+      "M2K": "M2KM6"
+    },
+    "test_payloads_summary": "1/7 aceitos, 6 rejeitados (SessionClosed no fim de semana)",
+    "cancel_response_code": 201,
+    "cancel_response_body": "{\"status\":\"accepted\",\"status_description\":\"No open orders for the asset\"}"
+  },
+
+  "mocked_api_note": "SignalStack webhook é REAL (não mockado). Buy/sell retornam SessionClosed no fim de semana (comportamento esperado). Cancel retorna 201."
+}

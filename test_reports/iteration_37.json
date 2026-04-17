@@ -1,0 +1,91 @@
+{
+  "summary": "V3 7-Point Improvements - All 23 tests passed. Verified: (1) TRANSIÇÃO absorption nomenclature fix with OFI EMA confirmation, (2) COMPLACÊNCIA POSITIONAL_ONLY ratio bypass, (3) Overnight Inventory unchanged, (4) Distance-based border detection in TRANSIÇÃO, (5) BULL/BEAR pullback/bounce tolerance uses 0.25×ATR(M5), (6) N3 Time-Decay Accumulator 30s TTL, (7) Welford Exponential with alpha=0.04 decay.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ #7 Welford cold start (n<=10) uses standard Welford algorithm",
+    "✅ #7 Welford exponential decay (n>10) applies alpha=0.04",
+    "✅ #7 Welford Z-Score uses different variance calculation for n<=10 vs n>10",
+    "✅ #7 Welford default alpha=0.04 confirmed",
+    "✅ #6 N3 TTL stitching: volumes accumulated when re-entering within 30s",
+    "✅ #6 N3 TTL reset: volumes reset when re-entering after >30s",
+    "✅ #5 BULL pullback_tolerance = 0.25 * atr_m5 (not 0.5*atr_m1)",
+    "✅ #5 BEAR bounce_tolerance = 0.25 * atr_m5 (not 0.5*atr_m1)",
+    "✅ #5 generate_execution_signal accepts atr_m5 parameter",
+    "✅ #5 evaluate() passes atr_m5 to generate_execution_signal",
+    "✅ #4 evaluate_filters uses distance-based border detection (|price-VAH| vs |price-VAL|)",
+    "✅ #4 n2_signal builder uses distance-based border detection for TRANSIÇÃO",
+    "✅ #4 Asymmetric profile scenario correctly identifies border",
+    "✅ #2 COMPLACÊNCIA POSITIONAL_ONLY sets n2_bullish_flow=True (skips ratio validation)",
+    "✅ #2 POSITIONAL_ONLY bypass is documented in code",
+    "✅ #1 SELL_ABSORPTION + above_poc → SELL (not BUY_ABSORPTION)",
+    "✅ #1 BUY_ABSORPTION + below_poc → BUY (not SELL_ABSORPTION)",
+    "✅ #1 SELL_ABSORPTION requires OFI EMA > 0.2 for SELL",
+    "✅ #1 BUY_ABSORPTION requires OFI EMA < -0.2 for BUY",
+    "✅ #1 Without OFI confirmation, action stays WAIT",
+    "✅ #1 Absorption nomenclature is documented in code",
+    "✅ Backend health endpoint returns healthy",
+    "✅ V3 signal endpoint returns valid response with N1/N2/N3 fields"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_v3_7point_improvements.py",
+    "/app/test_reports/pytest/pytest_v3_7point_improvements.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "#1 TRANSIÇÃO absorption nomenclature: BUY_ABSORPTION = passive buyers absorbing sellers → support holds → LONG. SELL_ABSORPTION = passive sellers absorbing buyers → resistance holds → SHORT. V3 trades in FAVOR of who absorbed.",
+    "#1 OFI EMA confirmation: SELL_ABSORPTION needs ofi_fast > 0.2 (buyer aggression being absorbed), BUY_ABSORPTION needs ofi_fast < -0.2 (seller aggression being absorbed)",
+    "#2 COMPLACÊNCIA POSITIONAL_ONLY: When DZ is unavailable, trusts static position (above VAH + above +2σ) instead of requiring ratio validation",
+    "#4 Border detection: Uses abs(price-VAH) < abs(price-VAL) instead of price > poc. Fixes asymmetric profiles where POC is near a border.",
+    "#5 Pullback/bounce tolerance: Uses 0.25×ATR(M5) for structural volatility, not M1 shock noise",
+    "#6 N3 TTL: 30s time-decay accumulator stitches Iceberg/Reload waves into single absorption tape",
+    "#7 Welford Exponential: First 10 observations use standard Welford (cold start), then applies alpha=0.04 decay (~25 session effective window)"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_v3_7point_improvements.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (23/23 tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for V3 signal endpoint test"
+  },
+
+  "seed_data_creation": "None - tests use direct imports and code inspection",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "V3 7-Point Improvements verified. Key code locations: (1) server.py lines 3781-3819 - absorption nomenclature fix with OFI EMA confirmation, (2) server.py lines 3703-3706 - COMPLACÊNCIA POSITIONAL_ONLY bypass, (4) server.py lines 3437-3442 and 3582-3592 - distance-based border detection, (5) server.py lines 3730 and 3859 - 0.25×ATR(M5) tolerance, (6) delta_zonal_service.py lines 519-562 - N3 TTL 30s accumulator, (7) delta_zonal_service.py lines 59-135 - Welford Exponential with alpha=0.04.",
+
+  "feature_verification": {
+    "#1_absorption_nomenclature": "Working - SELL_ABSORPTION + above_poc → SELL, BUY_ABSORPTION + below_poc → BUY",
+    "#1_ofi_ema_confirmation": "Working - SELL needs >0.2, BUY needs <-0.2",
+    "#2_positional_only_bypass": "Working - COMPLACÊNCIA skips ratio validation when DZ unavailable",
+    "#3_overnight_inventory": "Unchanged - kept as-is per requirements",
+    "#4_distance_based_border": "Working - uses |price-VAH| vs |price-VAL| instead of price > poc",
+    "#5_atr_m5_tolerance": "Working - BULL pullback and BEAR bounce use 0.25×ATR(M5)",
+    "#6_n3_ttl_30s": "Working - volumes stitched within 30s, reset after 30s absence",
+    "#7_welford_exponential": "Working - standard Welford for n<=10, alpha=0.04 decay for n>10"
+  },
+
+  "mocked_api_note": "SignalStack webhooks are MOCKED in Paper Mode. Tests verify logic flow, not actual webhook delivery."
+}

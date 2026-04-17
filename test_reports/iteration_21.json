@@ -1,0 +1,99 @@
+{
+  "summary": "ATR-Adaptive Buffers for Delta Zonal Ancorado - All 16 backend tests passed (100%), all frontend tests passed. N2 uses ATR(M5) with fractions VWAP/POC=1.0x, VAH/VAL=0.75x. N3 uses ATR(M1) with fractions call/put_wall=0.25x, zgl=0.50x, vwap±3σ=0.50x. Both /api/v3/signal/{symbol} and /api/v3/delta-zonal/{symbol} endpoints return correct ATR info. Frontend renders Delta Zonal cards with buffer info, ATR fraction labels, and position indicators.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ returns N2 delta_zonal with mode=N2_STRUCTURE and atr_m5",
+    "✅ N2 levels include: buffer, buffer_range, atr_fraction, volume_in_buffer, position",
+    "✅ N2 ATR fractions correct: VWAP=1.0, POC=1.0, VAH=0.75, VAL=0.75",
+    "✅ GET /api/v3/signal/MNQ returns N3 delta_zonal with mode=N3_EXTREME and atr_m1",
+    "✅ N3 levels include: buffer, atr_fraction, zone_range",
+    "✅ N3 ATR fractions correct: call_wall=0.25, put_wall=0.25, zgl=0.50, vwap_pos3s=0.50, vwap_neg3s=0.50",
+    "✅ GET /api/v3/delta-zonal/MNQ returns 200 with n2_structure and n3_extreme",
+    "✅ delta-zonal endpoint N2 has atr_m5",
+    "✅ delta-zonal endpoint N3 has atr_m1",
+    "✅ MES signal endpoint returns 200",
+    "✅ MES delta-zonal endpoint returns 200",
+    "✅ MES N2 levels have correct ATR fractions",
+    "✅ ATR_M1 < ATR_M5 (correct scaling)",
+    "✅ N2 buffer = atr_m5 * atr_fraction (verified)",
+    "✅ N3 buffer = atr_m1 * atr_fraction (verified)",
+    "✅ Frontend N2 panel renders Delta Zonal cards with buffer info",
+    "✅ Frontend N2 shows ATR(M5) label",
+    "✅ Frontend N2 shows ATR fraction labels (1.0x ATR, 0.75x ATR)",
+    "✅ Frontend N2 shows position indicators (ABOVE/BELOW/BUFFER)",
+    "✅ Frontend N3 panel renders Delta Zonal Extremo cards with buffer info",
+    "✅ Frontend N3 shows ATR(M1) label",
+    "✅ Frontend N3 shows ATR fraction labels (0.25x ATR, 0.5x ATR)",
+    "✅ Frontend N3 shows zone_range for each level",
+    "✅ Dashboard loads without errors"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_delta_zonal_atr.py",
+    "/app/test_reports/pytest/pytest_delta_zonal_atr_results.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_delta_zonal_atr.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (16/16 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "ATR-adaptive buffers for Delta Zonal Ancorado fully implemented and tested. Key implementation details: 1) N2 uses ATR(M5) computed from 5-minute candles with fractions: VWAP/POC=1.00x, VAH/VAL=0.75x. 2) N3 uses ATR(M1) computed from 1-minute candles with fractions: call_wall/put_wall=0.25x, zgl=0.50x, vwap±3σ=0.50x. 3) ATR fallback from 1H: M5=ATR_1H/sqrt(12), M1=ATR_1H/sqrt(60). 4) Backend services: DeltaZonalService in /app/backend/services/delta_zonal_service.py. 5) Endpoints: /api/v3/signal/{symbol} (includes delta_zonal in nivel_2 and nivel_3), /api/v3/delta-zonal/{symbol} (dedicated endpoint). 6) Frontend components: N2Confirmatory.jsx (DeltaZonalLevelCard), N3Execution.jsx (DeltaZonalExtremeCard). 7) Market is closed (weekend) so data is SIMULATED - indicated by 'source: simulated' in API response and 'Mercado fechado - dados simulados' in UI.",
+
+  "feature_verification": {
+    "n2_atr_m5_in_response": "Working - atr_m5=18.7139 returned",
+    "n3_atr_m1_in_response": "Working - atr_m1=8.3548 returned",
+    "n2_buffer_calculation": "Working - buffer = atr_m5 * fraction",
+    "n3_buffer_calculation": "Working - buffer = atr_m1 * fraction",
+    "n2_atr_fractions": "Working - VWAP/POC=1.0, VAH/VAL=0.75",
+    "n3_atr_fractions": "Working - call/put_wall=0.25, zgl=0.50, vwap±3σ=0.50",
+    "n2_position_indicator": "Working - above/below/in_buffer",
+    "n3_zone_range": "Working - displays low-high range",
+    "frontend_n2_panel": "Working - Delta Zonal cards with buffer info",
+    "frontend_n3_panel": "Working - Delta Zonal Extremo cards with buffer info",
+    "dedicated_endpoint": "Working - /api/v3/delta-zonal/{symbol}"
+  },
+
+  "observed_values": {
+    "mnq_atr_m5": 18.7139,
+    "mnq_atr_m1": 8.3548,
+    "n2_vwap_buffer": 18.71,
+    "n2_vwap_atr_fraction": 1.0,
+    "n2_vah_buffer": 14.04,
+    "n2_vah_atr_fraction": 0.75,
+    "n3_call_wall_buffer": 2.09,
+    "n3_call_wall_atr_fraction": 0.25,
+    "n3_zgl_buffer": 4.18,
+    "n3_zgl_atr_fraction": 0.5,
+    "data_source": "simulated (weekend)"
+  },
+
+  "mocked_api_note": "LiveDataService disabled (ENABLE_LIVE_DATA=false). Delta Zonal uses simulate_n2/simulate_n3 when market is closed (weekend). ATR values are scaled from 1H ATR using sqrt() when no trades available."
+}

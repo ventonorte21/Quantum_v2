@@ -1,0 +1,101 @@
+{
+  "summary": "Dynamic HUD Per-Line Roles feature fully tested. All 14 backend tests passed. Frontend Playwright tests verified HUD badges, N2 labels on buttons, family visibility, VWAP source fix, and manual override toggle. Backend N3 overnight fix verified: CAPITULACAO NOT in overnight fading block (line 3996).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ Backend: vwap_source is 'session_ny' (not intraday or fallback)",
+    "✅ Backend: VWAP bands present from session_ny (upper_1, lower_1, etc.)",
+    "✅ Backend: N3 overnight fix - line 3996 only checks TRANSICAO (CAPITULACAO removed)",
+    "✅ Backend: nivel_1.regime returns valid regime (BULL)",
+    "✅ Backend: nivel_2.passed returns boolean",
+    "✅ Backend: nivel_3.action returns valid action (WAIT/BUY/SELL)",
+    "✅ Backend: overnight_inventory and overnight_relevance in context",
+    "✅ Backend: BULL N2_VALIDATION has 3 levels (vah, upper_1, d1_poc)",
+    "✅ Backend: CAPITULACAO N2_VALIDATION has 4 levels (val, lower_3, put_wall, zgl)",
+    "✅ Backend: BULL N3_TARGETS has call_wall",
+    "✅ Backend: COMPLACENCIA N3_TARGETS is empty",
+    "✅ Backend: BULL visibility - vwap_shock hidden, overnight visible",
+    "✅ Backend: CAPITULACAO visibility - vp_d1 hidden, vwap_shock visible, overnight hidden",
+    "✅ Backend: BULL has 6 visible families",
+    "✅ Frontend: HUD Regime Badge shows 'BULL'",
+    "✅ Frontend: HUD Phase Badge shows 'RECON'",
+    "✅ Frontend: N2 Count Badge shows '3 niveis' for BULL regime",
+    "✅ Frontend: VP Session button has N2 label",
+    "✅ Frontend: VP D-1 button has N2 label",
+    "✅ Frontend: Bands ±1σ button has N2 label",
+    "✅ Frontend: VWAP button does NOT have N2 label",
+    "✅ Frontend: Gamma button does NOT have N2 label",
+    "✅ Frontend: ON H/L button does NOT have N2 label",
+    "✅ Frontend: 6 families visible for BULL (vp_session, vp_d1, vwap_session, vwap_trend, gamma, overnight)",
+    "✅ Frontend: vwap_shock (Bands ±3σ) correctly HIDDEN for BULL regime",
+    "✅ Frontend: No 'Intraday' text in chart filter (VWAP Intraday removed)",
+    "✅ Frontend: VWAP button shows 'VWAP' (not 'VWAP NY' or 'VWAP Intraday')",
+    "✅ Frontend: Manual override toggle works (button shows override state)"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_dynamic_hud_roles.py",
+    "/app/test_reports/pytest/pytest_dynamic_hud_roles.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "N2_VALIDATION constant correctly maps regime→lineIds for N2 validation boundaries",
+    "N3_TARGETS constant correctly maps regime→lineIds for N3 execution targets",
+    "getLineRole() correctly returns 'validation'/'target'/'context' based on regime and lineId",
+    "getLineConfig() correctly applies phase-aware styling (RECON: validation=solid, target=dashed, context=dim)",
+    "VWAP source fix at lines 4191-4220: only uses session_ny, not intraday",
+    "N3 overnight fix at line 3996: only TRANSICAO in fading block (CAPITULACAO removed)",
+    "Button N2 labels correctly show based on familyLineIds intersection with N2_VALIDATION",
+    "LEVEL_FAMILIES correctly renamed 'VWAP' (was 'VWAP NY'), no 'VWAP Intraday'"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_dynamic_hud_roles.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (14/14 Playwright checks passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and Playwright tests"
+  },
+
+  "seed_data_creation": "None - tests use live data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "Dynamic HUD Per-Line Roles feature fully tested. Key components: (1) N2_VALIDATION maps regime→lineIds that N2 actively checks (BULL: vah, upper_1, d1_poc). (2) N3_TARGETS maps regime→lineIds for execution targets (BULL: call_wall). (3) getLineRole() returns validation/target/context per line. (4) getLineConfig() applies phase-aware styling (RECON: validation=solid, target=dashed, context=15% opacity). (5) VWAP source fix: backend only uses session_ny (not intraday). (6) N3 overnight fix: CAPITULACAO removed from fading block (line 3996). Test file: /app/backend/tests/test_dynamic_hud_roles.py. Current regime: BULL. Phase: RECON.",
+
+  "feature_verification": {
+    "HUD Regime Badge": "Working - shows current regime from v3Signal.nivel_1.regime",
+    "HUD Phase Badge": "Working - shows RECON/TARGET/IN TRADE based on detectPhase()",
+    "N2 Count Badge": "Working - shows '3 niveis' for BULL regime in RECON phase",
+    "N2 Button Labels": "Working - VP Session, VP D-1, Bands ±1σ have N2 label; VWAP, Gamma, ON H/L do not",
+    "Family Visibility BULL": "Working - 6 families visible, vwap_shock hidden",
+    "VWAP Source": "Working - backend returns vwap_source='session_ny'",
+    "VWAP Intraday Removed": "Working - no 'Intraday' in chart filter or buttons",
+    "VWAP Label Renamed": "Working - button shows 'VWAP' (not 'VWAP NY')",
+    "N3 Overnight Fix": "Working - CAPITULACAO not in overnight fading block (line 3996)",
+    "Manual Override Toggle": "Working - clicking button toggles override state with visual feedback",
+    "Per-Line Role System": "Working - getLineRole() returns validation/target/context correctly"
+  },
+
+  "mocked_api_note": "POST /api/signalstack/order is MOCKED (SignalStack webhook). All other endpoints use live data."
+}

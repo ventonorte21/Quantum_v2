@@ -1,0 +1,90 @@
+{
+  "summary": "VWAP and VP Session Reset (Globex vs NY) fully tested. All 17 backend API tests passed. Frontend labels correctly show 'VWAP Globex' and 'VP Globex' during Globex session. Position sizing correctly halved (25% for TRANSICAO during Globex).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/session-vwaps/MNQ returns 'globex' and 'session_ny' keys (not 'intraday')",
+    "✅ GET /api/session-vwaps/MNQ: globex VWAP has vwap=24282.97, candle_count=261, label='VWAP Globex'",
+    "✅ GET /api/session-vwaps/MNQ: session_ny VWAP has label='VWAP NY (RTH)'",
+    "✅ GET /api/v3/signal/MNQ: context.session_type='globex'",
+    "✅ GET /api/v3/signal/MNQ: context.vwap_source='globex' (not 'unavailable')",
+    "✅ GET /api/v3/signal/MNQ: context.vwap=24282.92 (real Globex VWAP value)",
+    "✅ GET /api/v3/signal/MNQ: context.vwap_bands has upper_1=24316.85, lower_1=24248.99, upper_3=24384.70, lower_3=24181.14",
+    "✅ GET /api/v3/signal/MNQ: context.vp_source='globex' (not 'd-1')",
+    "✅ GET /api/v3/signal/MNQ: nivel_1.session_type='globex'",
+    "✅ GET /api/v3/signal/MNQ: nivel_1.session_lot_warning='Globex: lote 50% → 25% (thin market)'",
+    "✅ GET /api/v3/signal/MNQ: lot_pct=25 (halved from TRANSICAO base 50%)",
+    "✅ POST /api/analyze: session_vps has daily_vp, rth_vp, prev_day_vp keys",
+    "✅ POST /api/analyze: rth_vp.session='rth', session_start='2026-04-06T13:30:00+00:00' (09:30 ET)",
+    "✅ POST /api/analyze: daily_vp.session_start='2026-04-06T22:00:00+00:00' (18:00 ET overnight start)",
+    "✅ POST /api/analyze: session_vwaps.globex.candle_count=261 (>0)",
+    "✅ VWAP bands are symmetric around VWAP value",
+    "✅ Session times consistent between /api/session-vwaps and /api/analyze",
+    "✅ Frontend chart legend shows 'VWAP Globex' label",
+    "✅ Frontend chart legend shows 'VP Globex' label",
+    "✅ Frontend N2 panel shows 'VWAP Globex' in Multi-Session section",
+    "✅ Frontend shows 25% lot (Globex halved from TRANSICAO 50%)",
+    "✅ No deprecated 'Intraday' VWAP label found on frontend"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_vwap_vp_session_reset.py",
+    "/app/test_reports/pytest/pytest_vwap_vp_session_reset.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "VWAPService correctly renamed 'intraday' → 'globex' in calculate_session_vwaps_from_df",
+    "calculate_session_vps_from_df correctly returns 'rth_vp' (VP NY filtered 09:30-16:00 ET)",
+    "V3 engine correctly selects VWAP Globex during overnight session",
+    "Position sizing correctly halved during Globex (50% of base lot)",
+    "Frontend DataBentoChart.jsx correctly displays 'VWAP Globex' label",
+    "Frontend N2Confirmatory.jsx correctly shows 'VWAP Globex' in VWAP row"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_vwap_vp_session_reset.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (17/17 pytest tests passed)",
+    "frontend": "100% (all Playwright tests passed)"
+  },
+
+  "test_credentials": {
+    "session_token": "test_session_auth_1775441581328",
+    "note": "Used for API and Playwright tests"
+  },
+
+  "seed_data_creation": "None - tests use live market data from DataBento",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "VWAP and VP Session Reset (Globex vs NY) fully tested. Key changes verified: (1) VWAPService renamed 'intraday' → 'globex'. (2) calculate_session_vps_from_df returns 'rth_vp' (VP NY 09:30-16:00). (3) V3 engine selects VWAP Globex during overnight. (4) Position sizing halved during Globex. (5) Frontend labels updated to 'VWAP Globex'. Test file: /app/backend/tests/test_vwap_vp_session_reset.py with 17 tests.",
+
+  "feature_verification": {
+    "GET /api/session-vwaps/MNQ": "Working - returns globex and session_ny VWAPs with correct labels",
+    "GET /api/v3/signal/MNQ context": "Working - session_type=globex, vwap_source=globex, vp_source=globex",
+    "GET /api/v3/signal/MNQ nivel_1": "Working - session_type=globex, lot_pct=25 (halved), session_lot_warning contains Globex",
+    "POST /api/analyze session_vps": "Working - daily_vp starts 18:00 ET, rth_vp starts 09:30 ET",
+    "POST /api/analyze session_vwaps": "Working - globex has candle_count > 0",
+    "Frontend VWAP Globex label": "Working - visible in chart legend and N2 panel",
+    "Frontend VP Globex label": "Working - visible in chart legend",
+    "Frontend lot percentage": "Working - shows 25% (Globex halved from TRANSICAO 50%)"
+  },
+
+  "mocked_api_note": "SignalStack webhook is MOCKED. All VWAP/VP data is REAL from DataBento live feed."
+}

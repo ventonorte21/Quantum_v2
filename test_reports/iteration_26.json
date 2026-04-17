@@ -1,0 +1,93 @@
+{
+  "summary": "ETF→Futures Gamma conversion fully verified. All 11 backend tests passed (100%). Frontend verified: MNQ shows gamma levels (Put Wall 23,927, ZGL 24,450, Call Wall 24,339) correctly converted to futures prices (>10,000). MES shows gamma levels (~6,500) correctly in MES futures range. Chart plots gamma lines near futures price. TICK Index correctly removed. No console errors.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "passed_tests": [
+    "✅ GET /api/v3/signal/MNQ — context.call_wall, put_wall, zgl > 10000 (futures price)",
+    "✅ GET /api/v3/signal/MNQ — context.gamma.call_wall equals context.call_wall",
+    "✅ GET /api/v3/signal/MES — context.call_wall, put_wall, zgl > 3000 (futures price)",
+    "✅ POST /api/analyze {symbol:MNQ} — real_gamma has futures_call_wall, futures_put_wall, futures_zgl, futures_ratio",
+    "✅ POST /api/analyze MNQ — futures_ratio > 30 (QQQ→MNQ ~41x)",
+    "✅ POST /api/analyze MNQ — spot_price < 700 (ETF) and futures_* > 10000 (futures)",
+    "✅ N1 score_breakdown has Gamma/ZGL with pts 0-3 using SENTIMENT/ZGL_SIGNAL format",
+    "✅ N1 macro_score <= 13 and regime in valid set",
+    "✅ POST /api/analyze MES — futures_ratio > 8 (SPY→MES ~10x)",
+    "✅ V3 signal context.current_price is futures price (>10000 for MNQ)",
+    "✅ POST /api/positions/evaluate/MNQ uses futures gamma levels",
+    "✅ Frontend MNQ Gamma panel shows Put Wall 23,927 (>10000)",
+    "✅ Frontend MNQ Gamma panel shows ZGL 24,450 (>10000)",
+    "✅ Frontend MNQ Gamma panel shows Call Wall 24,339 (>10000)",
+    "✅ Frontend MES Gamma panel shows levels ~6,500 (correct MES futures range)",
+    "✅ Chart plots gamma lines (Call Wall, Put Wall, ZGL) near futures price",
+    "✅ TICK Index correctly removed from frontend",
+    "✅ No console errors"
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_etf_futures_conversion.py",
+    "/app/test_reports/pytest/pytest_etf_futures_conversion.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [],
+
+  "updated_files": [
+    "/app/backend/tests/test_etf_futures_conversion.py"
+  ],
+
+  "success_rate": {
+    "backend": "100% (11/11 tests passed)",
+    "frontend": "100% (all UI elements verified)"
+  },
+
+  "test_credentials": "No auth needed - public API endpoints",
+
+  "seed_data_creation": "None - using simulated weekend data + real yfinance gamma data",
+
+  "retest_needed": false,
+
+  "should_main_agent_self_test": true,
+
+  "context_for_next_testing_agent": "ETF→Futures conversion fully tested. The conversion uses price ratio (futures_price / etf_spot_price) to convert gamma levels from ETF (QQQ/SPY) to futures (MNQ/MES). For MNQ: QQQ ~$585 → MNQ ~$24,000, ratio ~41x. For MES: SPY ~$590 → MES ~$6,100, ratio ~10x. The conversion is centralized in backend (server.py lines 3620-3624 for V3 signal, lines 4307-4316 for /api/analyze). Frontend correctly displays futures_* fields from real_gamma. Chart uses futures_call_wall, futures_put_wall, futures_zgl for price lines. Market is closed (weekend) so DataBento data is simulated, but gamma data is real from yfinance options chain.",
+
+  "feature_verification": {
+    "etf_to_futures_conversion": "Working - uses price ratio (futures/etf_spot)",
+    "v3_signal_context_gamma": "Working - call_wall, put_wall, zgl at root and nested gamma object",
+    "analyze_futures_fields": "Working - futures_call_wall, futures_put_wall, futures_zgl, futures_ratio",
+    "mnq_futures_ratio": "Working - ~41x (QQQ→MNQ)",
+    "mes_futures_ratio": "Working - ~10x (SPY→MES)",
+    "gamma_scoring_format": "Working - SENTIMENT/ZGL_SIGNAL format",
+    "n1_macro_score": "Working - 0-13 range",
+    "n1_regime_detection": "Working - 5 valid regimes",
+    "frontend_gamma_panel": "Working - shows futures-converted levels",
+    "chart_gamma_lines": "Working - plots near futures price",
+    "tick_panel_removed": "Confirmed - not in frontend"
+  },
+
+  "observed_values": {
+    "mnq_put_wall": 23927,
+    "mnq_zgl": 24450,
+    "mnq_call_wall": 24339,
+    "mnq_futures_ratio": "~41x",
+    "mes_put_wall": 6545,
+    "mes_zgl": 6571,
+    "mes_call_wall": 6495,
+    "mes_futures_ratio": "~10x",
+    "regime": "TRANSICAO",
+    "macro_score": "7/13",
+    "data_source": "simulated OHLCV (weekend) + real yfinance gamma"
+  },
+
+  "mocked_api_note": "DataBento live trades simulated on weekends. Gamma data is REAL from yfinance options chain (QQQ/SPY). SignalStack orders are MOCKED in paper mode."
+}

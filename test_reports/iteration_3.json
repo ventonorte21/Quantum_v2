@@ -1,0 +1,69 @@
+{
+  "summary": "Completed comprehensive testing of auto trading model with confluence and confidence analysis for MNQ, MES, MYM, M2K micro futures. All backend APIs and frontend auto trading functionality working correctly. Configuration management, evaluation system, and risk management features all functional.",
+  
+  "backend_issues": {
+    "critical_bugs": [],
+    "flaky_endpoints": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend API /api/autotrading/config GET returns default configuration with all required fields",
+    "Backend API /api/autotrading/config POST saves configuration successfully",
+    "Backend API /api/autotrading/evaluate evaluates symbol and returns conditions status with confluence/confidence scores",
+    "Backend API /api/autotrading/state returns trading state with positions and daily stats",
+    "Backend API /api/autotrading/signals returns signal history with proper pagination",
+    "Frontend Auto Trade button in header opens modal correctly",
+    "Frontend modal shows Entry Conditions configuration section",
+    "Frontend modal shows Risk Management configuration section",
+    "Frontend modal shows Min Confluence Score input field (working - updated to 75)",
+    "Frontend modal shows Min Confidence Score input field (working - updated to 65)",
+    "Frontend modal shows VIX range inputs for volatility filtering",
+    "Frontend modal shows Volume Ratio input for volume filtering",
+    "Frontend modal shows MTF Alignment and Paper Trading toggles",
+    "Frontend modal shows Default Quantity and ATR Stop Multiplier inputs",
+    "Frontend modal shows Max Daily Trades input for risk management",
+    "Frontend Evaluate button triggers evaluation and shows results",
+    "Frontend evaluation results show signal direction and conditions met status",
+    "Frontend evaluation results show detailed conditions grid with pass/fail indicators",
+    "Frontend Save Configuration button saves settings successfully",
+    "Frontend modal close functionality works properly",
+    "All asset selectors (MNQ, MES, MYM, M2K) working correctly",
+    "All timeframe selectors (4H, 1H, 5M) working correctly",
+    "Refresh Analysis button triggers market analysis successfully",
+    "Run Backtest button executes backtesting functionality",
+    "TradingView chart integration working correctly",
+    "SignalStack integration fully functional (from previous testing)",
+    "Multi-timeframe confluence analysis displaying correctly",
+    "Confluence and confidence score displays with proper thresholds",
+    "Predictive and confirmatory indicators sections populated",
+    "Real-time market data integration working"
+  ],
+  
+  "test_report_links": [
+    "/app/backend_test.py",
+    "/root/.emergent/automation_output/20260404_193149/console_20260404_193149.log",
+    "/root/.emergent/automation_output/20260404_193234/console_20260404_193234.log"
+  ],
+  
+  "action_item_for_main_agent": "",
+  
+  "updated_files": [
+    "/app/backend_test.py"
+  ],
+  
+  "success_percentage": {
+    "backend": "100% (16/16 endpoints working including 5 auto trading APIs)",
+    "frontend": "100% (all auto trading modal components and interactions working)",
+    "integration": "100% (auto trading evaluation and configuration working correctly)",
+    "overall": "100%"
+  },
+  
+  "should_call_test_agent_after_fix": "false",
+  "should_main_agent_test_itself": "false"
+}

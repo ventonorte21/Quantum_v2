@@ -1000,7 +1000,7 @@ class ScalpEngine:
             logger.warning(f"ScalpEngine: erro get_levels {symbol}: {e}")
             return self._levels_cache.get(symbol, (0.0, {}))[1] or {}  # stale data on error
 
-    async def evaluate(self, symbol: str, quantity: int = 1, mode: Optional[str] = None, disabled_zone_types: Optional[List[str]] = None, r1_block: bool = True, r2_block: bool = True) -> ScalpSignal:
+    async def evaluate(self, symbol: str, quantity: int = 1, mode: Optional[str] = None, disabled_zone_types: Optional[List[str]] = None, zone_min_score_overrides: Optional[Dict[str, float]] = None, zone_min_confluence_overrides: Optional[Dict[str, float]] = None, r1_block: bool = True, r2_block: bool = True) -> ScalpSignal:
         """Avalia sinal completo (S1→S2→S3) no modo atual (ou no modo fornecido).
 
         Cache de resultado (2s TTL): quando múltiplos callers (push_loop, auto_trader, HTTP poll,
@@ -1276,6 +1276,8 @@ class ScalpEngine:
                     m1_bars=bars_z if bars_z else None,
                     s1_regime_value=signal.s1_regime if signal.s1_regime else None,
                     disabled_zone_types=disabled_zone_types or [],
+                    zone_min_score_overrides=zone_min_score_overrides or {},
+                    zone_min_confluence_overrides=zone_min_confluence_overrides or {},
                     snapshots_in_regime=_snap_count,
                     session_hod=_s_hod,
                     session_lod=_s_lod_safe,

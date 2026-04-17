@@ -1844,6 +1844,8 @@ def evaluate_zones(
     m1_bars: Optional[List[Dict[str, Any]]] = None,
     s1_regime_value: Optional[str] = None,
     disabled_zone_types: Optional[List[str]] = None,
+    zone_min_score_overrides: Optional[Dict[str, float]] = None,
+    zone_min_confluence_overrides: Optional[Dict[str, float]] = None,
     snapshots_in_regime: int = 999,
     session_hod: float = 0.0,
     session_lod: float = 0.0,
@@ -2265,6 +2267,45 @@ def evaluate_zones(
             symbol=symbol,
             regime_bias=_regime_bias,
         )
+
+        # ── Gate per-zona: score mínimo (zone_min_score_overrides) ──────────────
+        _zt_val = zone.zone_type.value
+        _zms = (zone_min_score_overrides or {}).get(_zt_val)
+        if passed and _zms is not None and breakdown.total_score < _zms:
+            passed  = False
+            quality = "BLOCKED"
+            reasons = reasons + [
+                f"zone_min_score: {breakdown.total_score:.2f} < {_zms:.1f} "
+                f"(threshold per-zona {_zt_val})"
+            ]
+            logger.debug(
+                "[ZONES] %s %s bloqueada por zone_min_score: %.2f < %.1f",
+                symbol, _zt_val, breakdown.total_score, _zms,
+            )
+
+        # ── Gate per-zona: confluence mínimo (zone_min_confluence_overrides) ────
+        _zmc = (zone_min_confluence_overrides or {}).get(_zt_val)
+        if passed and _zmc is not None:
+            _eff_conf = breakdown.confluence_boost if breakdown else 0.0
+            _sp_str   = float(_zone_session_params.get(
+                f"zones_score_strong_thresh_{symbol.lower()}",
+                _zone_session_params.get("zones_score_strong_thresh", 4.0)
+            ))
+            if _eff_conf < _zmc and breakdown.total_score < _sp_str:
+                passed  = False
+                quality = "BLOCKED"
+                reasons = reasons + [
+                    f"zone_min_confluence: conf={_eff_conf:.2f} < {_zmc:.2f} "
+                    f"e score={breakdown.total_score:.2f} < STRONG={_sp_str:.1f} "
+                    f"(threshold per-zona {_zt_val})"
+                ]
+                logger.debug(
+                    "[ZONES] %s %s bloqueada por zone_min_confluence: "
+                    "conf=%.2f < %.2f (score=%.2f < STRONG=%.1f)",
+                    symbol, _zt_val, _eff_conf, _zmc,
+                    breakdown.total_score, _sp_str,
+                )
+
         score_num = score_map.get(quality, 0) - zone.priority * 0.1
 
         if passed and score_num > best_score_num:

@@ -625,6 +625,19 @@ class ScalpAutoTrader:
                         if _zt not in disabled_zone_types:
                             disabled_zone_types.append(_zt)
 
+                # ── R5: desactiva SESSION_VAH_FADE (WR=0% MNQ+MES Param Audit) ────────
+                if config.get("r5_session_vah_fade_disabled", True):
+                    if "SESSION_VAH_FADE" not in disabled_zone_types:
+                        disabled_zone_types.append("SESSION_VAH_FADE")
+
+                # ── Gates per-zona derivados de Param Audit ──────────────────────────
+                _zone_min_score  = dict(config.get("zone_min_score_overrides",
+                                                    {"SIGMA2_FADE_SELL": 3.5}))
+                _zone_min_conf   = dict(config.get("zone_min_confluence_overrides",
+                                                    {"SESSION_VAL_FADE": 0.3}))
+                _zone_allow_mod  = list(config.get("zone_quality_allow_moderate",
+                                                    ["SIGMA2_FADE_BUY"]))
+
                 r1_block = bool(config.get("r1_moderate_rth_mid_block", True))
                 r2_block = bool(config.get("r2_bearish_rth_mid_close_block", True))
                 max_positions    = int(config.get("max_positions", 2))
@@ -694,6 +707,8 @@ class ScalpAutoTrader:
                             symbol, qty,
                             mode=engine_mode,
                             disabled_zone_types=disabled_zone_types,
+                            zone_min_score_overrides=_zone_min_score,
+                            zone_min_confluence_overrides=_zone_min_conf,
                             r1_block=r1_block,
                             r2_block=r2_block,
                         )
@@ -869,8 +884,19 @@ class ScalpAutoTrader:
                             or "STRONG"
                         )
 
-                    signal_quality = getattr(signal, "s2_quality", "WEAK")
+                    signal_quality     = getattr(signal, "s2_quality", "WEAK")
                     signal_quality_str = _normalize_quality(signal_quality)
+
+                    # ── G-2 excepção per-zona: zonas em _zone_allow_mod disparam com MODERATE ──
+                    _active_zt = getattr(signal, "zone_type_str", None) or ""
+                    if _active_zt in _zone_allow_mod and not _meets_quality(signal_quality, min_quality_eff):
+                        if _meets_quality(signal_quality, "MODERATE"):
+                            logger.info(
+                                f"AutoTrader G-2 MODERATE-OVERRIDE: {symbol} {_active_zt} "
+                                f"qualidade={signal_quality_str} — zone_quality_allow_moderate"
+                            )
+                            min_quality_eff = "MODERATE"
+
                     if not _meets_quality(signal_quality, min_quality_eff):
                         logger.info(
                             f"AutoTrader G-2 BLOQUEADO: {symbol} qualidade={signal_quality_str} "

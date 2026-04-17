@@ -179,7 +179,7 @@ class ScalpConfigUpdate(BaseModel):
     news_blackout_enabled:         bool = True
     news_blackout_minutes_before:  int  = Field(default=15, ge=0, le=60)
     news_blackout_minutes_after:   int  = Field(default=15, ge=0, le=60)
-    # ── Filtros R1-R4 (análise Apr 14-17, Δ +88 pts esperados) ──────────────
+    # ── Filtros R1-R5 (análise empírica por Param Audit) ─────────────────────
     # R1: bloqueia sinais MODERATE em RTH_MID (WR=16.7%, EV=−53.78 pts)
     r1_moderate_rth_mid_block:      bool = True
     # R2: bloqueia sinais em BEARISH_FLOW durante RTH_MID/RTH_CLOSE (WR=27.3%, EV=−49.81 pts)
@@ -188,6 +188,24 @@ class ScalpConfigUpdate(BaseModel):
     r3_gamma_put_wall_disabled:     bool = True
     # R4: desactiva zona VWAP_PULLBACK (WR<40% consistente)
     r4_vwap_pullback_disabled:      bool = True
+    # R5: desactiva SESSION_VAH_FADE (WR=0% MNQ+MES 30d, avg=−5.68/−1.60 pts — Param Audit)
+    r5_session_vah_fade_disabled:   bool = True
+    # ── Gates per-zona derivados de Param Audit ───────────────────────────────
+    # Score mínimo efectivo por zona (sobrepõe MODERATE global)
+    # Padrão: SIGMA2_FADE_SELL exige ≥3.5 (bucket 2.5-3.0: WR=0-17% em MES N=26)
+    zone_min_score_overrides: Dict[str, float] = Field(
+        default_factory=lambda: {"SIGMA2_FADE_SELL": 3.5}
+    )
+    # Confluence mínimo por zona (bloqueia se confluence=0 e score<STRONG)
+    # Padrão: SESSION_VAL_FADE exige ≥0.3 (bucket 3.0 sem confluence: WR=25% MNQ)
+    zone_min_confluence_overrides: Dict[str, float] = Field(
+        default_factory=lambda: {"SESSION_VAL_FADE": 0.3}
+    )
+    # Zonas que podem disparar com MODERATE mesmo que min_quality_rth=STRONG
+    # Padrão: SIGMA2_FADE_BUY (bucket 3.0-3.5 MES: WR=60-75% > bucket 4.0: WR=40%)
+    zone_quality_allow_moderate: List[str] = Field(
+        default_factory=lambda: ["SIGMA2_FADE_BUY"]
+    )
 
 
 class ScalpTradeClose(BaseModel):
@@ -222,6 +240,18 @@ def _get_collection(name: str):
     if _database is None:
         raise HTTPException(status_code=503, detail="Database não inicializado")
     return _database[name]
+
+
+def _apply_scalp_config_defaults(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Preenche campos ausentes no doc MongoDB com os defaults do ScalpConfigUpdate."""
+    try:
+        defaults = ScalpConfigUpdate().model_dump()
+        for key, val in defaults.items():
+            if key not in doc or doc[key] is None:
+                doc[key] = val
+    except Exception:
+        pass
+    return doc
 
 
 async def _get_scalp_config() -> Dict[str, Any]:
@@ -281,8 +311,8 @@ async def _get_scalp_config() -> Dict[str, Any]:
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         await col.insert_one({**default})
-        return default
-    return doc
+        return _apply_scalp_config_defaults(default)
+    return _apply_scalp_config_defaults(doc)
 
 
 async def _send_signalstack_order(webhook_url: str, payload: Dict[str, Any]) -> Dict[str, Any]:

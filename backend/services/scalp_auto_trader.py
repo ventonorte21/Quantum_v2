@@ -314,13 +314,17 @@ class ScalpAutoTrader:
 
     # ── Circuit Breaker ───────────────────────────────────────────────────────
 
-    def _trigger_circuit_breaker(self, reason: str):
+    def _trigger_circuit_breaker(self, reason: str, gate_id: str = "G3", config: Optional[Dict] = None):
         """Activa o circuit breaker de sessão e pausa o auto trader."""
         self._session_stats["circuit_breaker_active"] = True
         self._session_stats["circuit_breaker_reason"] = reason
-        logger.warning(f"AutoTrader CIRCUIT BREAKER: {reason} — loop suspenso. Reinicie manualmente.")
+        logger.warning(f"AutoTrader CIRCUIT BREAKER [{gate_id}]: {reason} — loop suspenso. Reinicie manualmente.")
         try:
             asyncio.get_event_loop().create_task(self._persist_session_stats())
+        except Exception:
+            pass
+        try:
+            asyncio.ensure_future(self._log_circuit_breaker_event(gate_id, reason, config or {}))
         except Exception:
             pass
 
@@ -351,7 +355,8 @@ class ScalpAutoTrader:
         max_loss = float(config.get("max_daily_loss_usd", 200.0))
         if max_loss > 0 and stats["daily_pnl_usd"] <= -max_loss:
             self._trigger_circuit_breaker(
-                f"Perda diária atingida: ${stats['daily_pnl_usd']:.2f} ≤ -${max_loss:.2f}"
+                f"Perda diária atingida: ${stats['daily_pnl_usd']:.2f} ≤ -${max_loss:.2f}",
+                gate_id="G3a", config=config,
             )
             return True
 
@@ -359,7 +364,8 @@ class ScalpAutoTrader:
         max_consec = int(config.get("max_consecutive_losses", 3))
         if max_consec > 0 and stats["consecutive_losses"] >= max_consec:
             self._trigger_circuit_breaker(
-                f"Perdas consecutivas: {stats['consecutive_losses']} ≥ {max_consec}"
+                f"Perdas consecutivas: {stats['consecutive_losses']} ≥ {max_consec}",
+                gate_id="G3b", config=config,
             )
             return True
 
@@ -367,7 +373,8 @@ class ScalpAutoTrader:
         max_daily = int(config.get("max_daily_trades", 10))
         if max_daily > 0 and stats["daily_trades"] >= max_daily:
             self._trigger_circuit_breaker(
-                f"Limite diário de trades atingido: {stats['daily_trades']} ≥ {max_daily}"
+                f"Limite diário de trades atingido: {stats['daily_trades']} ≥ {max_daily}",
+                gate_id="G4", config=config,
             )
             return True
 
@@ -2230,6 +2237,49 @@ class ScalpAutoTrader:
                 key, symbol, float(z_level_raw),
             )
 
+
+    # ── Circuit Breaker logging ──────────────────────────────────────────────────
+
+    async def _log_circuit_breaker_event(
+        self,
+        gate_id: str,
+        reason: str,
+        config: Dict,
+    ) -> None:
+        """
+        Persiste activação de G-3/G-4 no scalp_signal_log.
+        Permite post-mortem de sessões em que o circuit breaker disparou
+        — anteriormente silent (apenas logger.warning, sem trace em MongoDB).
+        """
+        if self._database is None:
+            return
+        stats = self._session_stats
+        gate_outcome = f"{gate_id}_BLOCKED"
+        doc = {
+            "ts":           datetime.now(timezone.utc),
+            "symbol":       None,
+            "session":      _get_trade_session_label(),
+            "zone_type":    None,
+            "gate_outcome": gate_outcome,
+            "gate_reason":  reason,
+            # Estado dos contadores no momento do disparo
+            "stats_at_trigger": {
+                "daily_pnl_usd":       stats.get("daily_pnl_usd", 0.0),
+                "daily_trades":        stats.get("daily_trades", 0),
+                "consecutive_losses":  stats.get("consecutive_losses", 0),
+            },
+            # Thresholds configurados que foram atingidos
+            "param_snapshot": {
+                "max_daily_loss_usd":       config.get("max_daily_loss_usd", 200.0),
+                "max_consecutive_losses":   config.get("max_consecutive_losses", 3),
+                "max_daily_trades":         config.get("max_daily_trades", 10),
+            },
+        }
+        try:
+            await self._database["scalp_signal_log"].insert_one(doc)
+            logger.info("AutoTrader: %s registado no signal_log — %s", gate_outcome, reason)
+        except Exception as _e:
+            logger.debug("circuit_breaker_log insert error: %s", _e)
 
     # ── Funil de sinais ─────────────────────────────────────────────────────────
 

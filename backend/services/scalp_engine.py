@@ -20,6 +20,7 @@ Parâmetros de execução:
 import asyncio
 import logging
 import time
+import uuid
 from collections import defaultdict
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional, List, Tuple
@@ -172,6 +173,7 @@ class ScalpSignalQuality(str, Enum):
 
 class ScalpSignal:
     def __init__(self):
+        self.signal_id: str = uuid.uuid4().hex
         self.symbol: str = ""
         self.timestamp: str = ""
         self.mode: str = ScalpMode.FLOW
@@ -301,6 +303,7 @@ class ScalpSignal:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
+            "signal_id": self.signal_id,
             "symbol": self.symbol,
             "timestamp": self.timestamp,
             "mode": self.mode,

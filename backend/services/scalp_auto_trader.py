@@ -2329,6 +2329,7 @@ class ScalpAutoTrader:
 
         doc = {
             "ts":                  datetime.now(timezone.utc),
+            "signal_id":           getattr(signal, "signal_id", None),
             "symbol":              symbol,
             "session":             session,
             "zone_type":           str(zone_type),

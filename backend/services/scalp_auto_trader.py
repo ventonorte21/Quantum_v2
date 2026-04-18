@@ -897,6 +897,26 @@ class ScalpAutoTrader:
                             )
                             min_quality_eff = "MODERATE"
 
+                    # ── param_snapshot: captura thresholds activos no momento ──────
+                    # Permite backtesting fidedigno mesmo após mudança de parâmetros.
+                    _param_snapshot = {
+                        "min_quality_eff":                     min_quality_eff,
+                        "session":                             _g2_session,
+                        "zones_score_moderate_thresh":         config.get(
+                            f"zones_score_moderate_thresh_{_sym_lower}",
+                            config.get("zones_score_moderate_thresh", 3.1),
+                        ),
+                        "zones_score_strong_thresh":           config.get(
+                            f"zones_score_strong_thresh_{_sym_lower}",
+                            config.get("zones_score_strong_thresh", 4.7),
+                        ),
+                        "zones_sigma2_buy_moderate_min_score": config.get(
+                            "zones_sigma2_buy_moderate_min_score", 3.5
+                        ),
+                        "zone_min_score_overrides":            dict(_zone_min_score),
+                        "zone_quality_allow_moderate":         list(_zone_allow_mod),
+                    }
+
                     if not _meets_quality(signal_quality, min_quality_eff):
                         logger.info(
                             f"AutoTrader G-2 BLOQUEADO: {symbol} qualidade={signal_quality_str} "
@@ -905,14 +925,15 @@ class ScalpAutoTrader:
                         asyncio.ensure_future(self._log_signal_event(
                             signal, _sig_sess, "G2_BLOCKED",
                             f"quality={signal_quality_str} < min={min_quality_eff}",
-                            paper=_sig_paper))
+                            paper=_sig_paper,
+                            param_snapshot=_param_snapshot))
                         continue
 
                     logger.info(
                         f"AutoTrader EXEC: {symbol} qualidade={signal_quality_str} "
                         f"≥ min={min_quality_eff} (sessão={_g2_session}) — chamando _execute_trade"
                     )
-                    await self._execute_trade(signal, config)
+                    await self._execute_trade(signal, config, param_snapshot=_param_snapshot)
 
             except asyncio.CancelledError:
                 break
@@ -925,7 +946,7 @@ class ScalpAutoTrader:
 
     # ── Execução de trade ──
 
-    async def _execute_trade(self, signal, config: Dict[str, Any]):
+    async def _execute_trade(self, signal, config: Dict[str, Any], param_snapshot: Optional[Dict] = None):
         symbol    = signal.symbol
         action    = signal.s3_action
         price     = signal.last_price
@@ -1130,6 +1151,7 @@ class ScalpAutoTrader:
                 f"quality={_exec_qual} → trade_id={trade_id}",
                 trade_id=trade_id,
                 paper=paper,
+                param_snapshot=param_snapshot,
             ))
         except Exception as _le:
             logger.debug("signal_log EXECUTED error: %s", _le)
@@ -2219,6 +2241,7 @@ class ScalpAutoTrader:
         gate_reason: str,
         trade_id: Optional[str] = None,
         paper: bool = False,
+        param_snapshot: Optional[Dict] = None,
     ) -> None:
         """
         Persiste um evento de sinal no MongoDB (colecção scalp_signal_log).
@@ -2297,6 +2320,10 @@ class ScalpAutoTrader:
             "gate_reason":         gate_reason,
             "trade_id":            trade_id,
             "paper":               paper,
+            # ── Snapshot dos thresholds activos no momento da decisão ──────────
+            # Permite backtesting fidedigno após mudanças de parâmetros:
+            # sem este campo, análise histórica pós-mudança assume valor actual.
+            "param_snapshot":      param_snapshot or {},
         }
         try:
             await self._database["scalp_signal_log"].insert_one(doc)

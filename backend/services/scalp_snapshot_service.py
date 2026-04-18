@@ -86,6 +86,11 @@ async def ensure_scalp_snapshot_indexes(database):
             [("symbol", 1), ("mode", 1), ("zones.active_zone", 1), ("zone_score", -1)],
             name="sym_mode_active_zone_score",
         )
+        # Gate audit trail — análise de stacking e frequência por gate
+        await col.create_index(
+            [("symbol", 1), ("block_gate", 1), ("recorded_at", -1)],
+            name="sym_block_gate_time",
+        )
         logger.info("Scalp snapshot indexes ensured on scalp_snapshots collection")
     except Exception as e:
         logger.warning(f"Scalp snapshot index creation (may already exist): {e}")
@@ -126,6 +131,13 @@ def build_scalp_snapshot_document(symbol: str, sig_dict: Dict[str, Any]) -> Dict
         "session_label": get_session_label(now),
         "mode":          sig_dict.get("mode", "FLOW"),
         "scalp_status":  sig_dict.get("scalp_status", "NO_SIGNAL"),
+        # Gate audit trail — primeiro gate que bloqueou o sinal (engine + zonas).
+        # None = sinal passou todos os gates (ACTIVE_SIGNAL).
+        # Permite queries de stacking: quantas vezes D30_RANGE co-ocorre com ZONE_OFI_FAST?
+        # Valores: D30_RANGE | NO_ZONE | ZONE_SCORE_MIN | ZONE_CONF_MIN |
+        #          ZONE_OFI_FAST | ZONE_OFI_SLOW | ZONE_TAPE_DRY | ZONE_CONF_LOW |
+        #          ZONE_SCORE_LOW | ZONE_ENTRY | GAMMA_SUPPRESSED | NO_SIGNAL
+        "block_gate":    sig_dict.get("block_gate"),
         "s1_regime":     s1.get("regime"),
         "s1_direction":  s1.get("direction"),
         "s2_passed":     s2.get("passed", False),

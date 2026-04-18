@@ -108,6 +108,57 @@ class ScalpRegime(str, Enum):
     NO_DATA        = "NO_DATA"
 
 
+def _derive_zone_block_gate(
+    status: str,
+    block_reasons: list,
+    gamma_block_reasons: list,
+) -> Optional[str]:
+    """
+    Converte block_reasons textuais em código estruturado para análise de stacking.
+    Retorna None quando o sinal passou (ACTIVE_SIGNAL).
+
+    Hierarquia de precedência (mais específico primeiro):
+      ZONE_SCORE_MIN  → gate per-zona zone_min_score bloqueou
+      ZONE_CONF_MIN   → gate per-zona zone_min_confluence bloqueou
+      GAMMA_SUPPRESSED→ SHORT_GAMMA suppression (bloco de mercado)
+      NO_ZONE         → preço fora de todas as zonas activas
+      ZONE_OFI_FAST   → OFI fast não alinhado / fraco
+      ZONE_OFI_SLOW   → OFI slow bloqueou a entrada
+      ZONE_TAPE_DRY   → tape seco em fade (tape speed)
+      ZONE_CONF_LOW   → confluência de zonas insuficiente
+      ZONE_SCORE_LOW  → score abaixo do threshold
+      ZONE_ENTRY      → outra razão de evaluate_zone_entry
+    """
+    if status == "ACTIVE_SIGNAL":
+        return None
+    if status == "NO_ZONE":
+        return "NO_ZONE"
+    # Verificar gamma antes de qualquer razão de bloqueio
+    if gamma_block_reasons:
+        return "GAMMA_SUPPRESSED"
+    all_reasons = block_reasons or []
+    for r in all_reasons:
+        rl = r.lower()
+        if "zone_min_score" in rl:
+            return "ZONE_SCORE_MIN"
+        if "zone_min_confluence" in rl:
+            return "ZONE_CONF_MIN"
+    if all_reasons:
+        r0 = all_reasons[0].lower()
+        if "ofi slow" in r0:
+            return "ZONE_OFI_SLOW"
+        if "ofi fast" in r0:
+            return "ZONE_OFI_FAST"
+        if "tape" in r0:
+            return "ZONE_TAPE_DRY"
+        if "conf" in r0:
+            return "ZONE_CONF_LOW"
+        if "score" in r0 or "abaixo" in r0 or "threshold" in r0:
+            return "ZONE_SCORE_LOW"
+        return "ZONE_ENTRY"
+    return "NO_SIGNAL"
+
+
 class ScalpSignalQuality(str, Enum):
     STRONG   = "STRONG"
     MODERATE = "MODERATE"
@@ -181,6 +232,16 @@ class ScalpSignal:
         self.scalp_status: str = "NO_SIGNAL"
         self.atr_source: str = "live"    # "live" | "fallback" | "n/a"
 
+        # Gate audit trail — funil de bloqueio por stage (gravado nos snapshots)
+        # block_gate: código estruturado do primeiro gate que bloqueou o sinal.
+        #   Valores possíveis:
+        #     Engine:  D30_RANGE
+        #     Zonas:   NO_ZONE, ZONE_SCORE_MIN, ZONE_CONF_MIN, ZONE_OFI_FAST,
+        #              ZONE_OFI_SLOW, ZONE_TAPE_DRY, ZONE_CONF_LOW, ZONE_SCORE_LOW,
+        #              GAMMA_SUPPRESSED, ZONE_ENTRY
+        #     Passado: None (ACTIVE_SIGNAL sem bloqueio)
+        self.block_gate: Optional[str] = None
+
         # Proveniência dos dados de mercado — para audit trail nos snapshots
         # "live"   → valor computado de dados DataBento frescos neste ciclo
         # "seed"   → valor injetado do snapshot anterior no startup (warm-start)
@@ -244,6 +305,7 @@ class ScalpSignal:
             "timestamp": self.timestamp,
             "mode": self.mode,
             "scalp_status": self.scalp_status,
+            "block_gate":   self.block_gate,
             "s1": {
                 "regime": self.s1_regime,
                 "confidence": self.s1_confidence,
@@ -1192,6 +1254,7 @@ class ScalpEngine:
 
                 if signal.d30_state == "BLOCKED":
                     signal.scalp_status    = "D30_BLOCKED"
+                    signal.block_gate      = "D30_RANGE"
                     signal.s2_block_reasons = [f"D30={signal.disp_30m:+.1f}pts (±20 threshold)"]
                     logger.info(
                         "D30 BLOCKED [%s]: disp_30m=%+.1f pts — trade rejeitado",
@@ -1328,6 +1391,12 @@ class ScalpEngine:
                 signal.scalp_status         = zones_result.get("status", "NO_SIGNAL")
                 signal.s2_block_reasons     = zones_result.get("block_reasons", [])
                 signal.s2_passed            = (zones_result.get("status") == "ACTIVE_SIGNAL")
+                # block_gate: código estruturado do gate que bloqueou (para análise de stacking)
+                signal.block_gate           = _derive_zone_block_gate(
+                    zones_result.get("status", "NO_SIGNAL"),
+                    zones_result.get("block_reasons", []),
+                    zones_result.get("gamma_block_reasons", []),
+                )
                 signal.zone_score_breakdown = zones_result.get("score_breakdown")
                 signal.zone_active_params   = zones_result.get("active_params")
                 # F7: Gate 5 (EMA_PRICE_COOLDOWN) e Gate 6 (EMA_ZONE_TYPE_COOLDOWN)

@@ -1,10 +1,10 @@
 {
-  "backup_at": "2026-04-18T15:26:25Z",
+  "backup_at": "2026-04-18T16:40:05Z",
   "repo": "ventonorte21/Quantum_v2",
   "collections": {
     "scalp_config": {
       "docs": 1,
-      "bytes": 1104,
+      "bytes": 1101,
       "ok": true
     },
     "scalp_trades": {

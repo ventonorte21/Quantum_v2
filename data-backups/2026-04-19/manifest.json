@@ -1,50 +1,42 @@
 {
-  "backup_at": "2026-04-19T19:18:54Z",
+  "backup_at": "2026-04-19T20:40:50Z",
   "repo": "ventonorte21/Quantum_v2",
+  "retention_days": 30,
   "collections": {
     "scalp_config": {
       "docs": 1,
-      "bytes": 1099,
       "ok": true
     },
     "scalp_trades": {
-      "docs": 191,
-      "bytes": 25900,
+      "docs": 0,
       "ok": true
     },
     "scalp_trader_state": {
       "docs": 2,
-      "bytes": 230,
       "ok": true
     },
     "scalp_snapshots": {
       "docs": 41944,
-      "bytes": 4762576,
       "ok": true
     },
     "scalp_history": {
       "docs": 0,
-      "bytes": 22,
       "ok": true
     },
     "scalp_fills": {
       "docs": 0,
-      "bytes": 22,
       "ok": true
     },
     "positions": {
       "docs": 0,
-      "bytes": 22,
       "ok": true
     },
     "pb_state_log": {
       "docs": 93,
-      "bytes": 2563,
       "ok": true
     },
     "scalp_signal_log": {
       "docs": 30,
-      "bytes": 2689,
       "ok": true
     }
   }

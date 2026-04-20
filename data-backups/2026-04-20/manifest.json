@@ -1,5 +1,5 @@
 {
-  "backup_at": "2026-04-20T10:34:40Z",
+  "backup_at": "2026-04-20T11:19:29Z",
   "repo": "ventonorte21/Quantum_v2",
   "retention_days": 30,
   "collections": {
@@ -16,7 +16,7 @@
       "ok": true
     },
     "scalp_snapshots": {
-      "docs": 47340,
+      "docs": 47680,
       "ok": true
     },
     "scalp_history": {

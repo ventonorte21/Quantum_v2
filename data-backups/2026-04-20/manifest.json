@@ -1,5 +1,5 @@
 {
-  "backup_at": "2026-04-20T02:16:07Z",
+  "backup_at": "2026-04-20T08:35:01Z",
   "repo": "ventonorte21/Quantum_v2",
   "retention_days": 30,
   "collections": {
@@ -16,7 +16,7 @@
       "ok": true
     },
     "scalp_snapshots": {
-      "docs": 43916,
+      "docs": 46472,
       "ok": true
     },
     "scalp_history": {
@@ -32,11 +32,11 @@
       "ok": true
     },
     "pb_state_log": {
-      "docs": 104,
+      "docs": 107,
       "ok": true
     },
     "scalp_signal_log": {
-      "docs": 36,
+      "docs": 37,
       "ok": true
     }
   }
